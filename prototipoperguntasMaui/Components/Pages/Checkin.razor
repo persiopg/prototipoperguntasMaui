@@ -1,0 +1,131 @@
+@page "/checkin/{StoreId:int}"
+@using prototipoperguntasMaui.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using System
+@using System.IO
+@inject AppStateService AppState
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="mobile-container flex flex-col min-h-screen">
+    @if (CurrentStore != null)
+    {
+        <div class="sticky top-0 z-40 bg-[#F3F4F6]/95 backdrop-blur-md px-5 py-3 flex justify-between items-center shadow-sm border-b border-white/50">
+            <button @onclick="BackToDashboard" class="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-bold transition text-sm py-2">
+                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid fa-chevron-left"></i></div>
+                Voltar
+            </button>
+            <div class="text-xs font-bold text-slate-500">Check-in</div>
+        </div>
+
+        <div class="p-5 pb-32 flex-grow">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-3xl p-6 mb-8 shadow-xl shadow-blue-200 mt-4 fade-in relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 opacity-20 transform rotate-12">
+                    <i class="fa-solid fa-store text-[140px]"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-white/20 mb-2 inline-block">@CurrentStore.Channel</span>
+                    <h2 class="font-black text-2xl mb-1 leading-none tracking-tight">@CurrentStore.Name</h2>
+                    <p class="text-blue-200 text-xs font-medium mt-2 flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot"></i> @CurrentStore.Address
+                    </p>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3 class="font-black text-slate-800 text-lg mb-2">Foto da Fachada</h3>
+                <p class="text-xs text-slate-500 mb-4">Tire ou selecione uma foto antes de iniciar a visita.</p>
+
+                <InputFile @ref="FileInput" OnChange="OnFileChange" accept="image/*" capture="environment" class="w-full" />
+
+                @if (!string.IsNullOrWhiteSpace(PhotoPreviewDataUrl))
+                {
+                    <div class="mt-5">
+                        <img src="@PhotoPreviewDataUrl" class="w-full rounded-2xl border border-slate-100 shadow-sm" />
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl p-5 border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-[480px] md:mx-auto z-50 rounded-t-3xl">
+            <button @onclick="ConfirmCheckin" disabled="@(!CanProceed)" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.01] transition-all flex justify-between items-center px-8 group disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="group-hover:translate-x-1 transition-transform">INICIAR VISITA</span>
+                <div class="bg-slate-800 rounded-xl w-8 h-8 flex items-center justify-center group-hover:bg-slate-700 transition-colors border border-slate-700">
+                    <i class="fa-solid fa-camera text-sm text-blue-300"></i>
+                </div>
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="p-10 flex flex-col items-center justify-center h-screen">
+            <h1 class="text-xl font-bold">Loja não encontrada</h1>
+            <button @onclick="BackToDashboard" class="mt-4 bg-blue-500 text-white p-2 rounded">Voltar</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int StoreId { get; set; }
+    private Store? CurrentStore;
+    private string? PhotoPreviewDataUrl;
+    private bool CanProceed => !string.IsNullOrWhiteSpace(PhotoPreviewDataUrl);
+    private InputFile? FileInput;
+    private bool AutoOpened;
+
+    protected override void OnInitialized()
+    {
+        CurrentStore = AppState.Stores.FirstOrDefault(s => s.Id == StoreId);
+        if (CurrentStore == null) return;
+
+        if (CurrentStore.Status == "REALIZADO")
+        {
+            Nav.NavigateTo("/dashboard");
+            return;
+        }
+
+        if (CurrentStore.Status == "EM_ANDAMENTO")
+        {
+            AppState.ResumeVisit(StoreId);
+            Nav.NavigateTo($"/store/{StoreId}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !AutoOpened)
+        {
+            AutoOpened = true;
+            await JS.InvokeVoidAsync("checkin.openCamera");
+        }
+    }
+
+    private async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var base64 = Convert.ToBase64String(ms.ToArray());
+        PhotoPreviewDataUrl = $"data:{file.ContentType};base64,{base64}";
+
+        AppState.CompleteCheckin(StoreId, PhotoPreviewDataUrl);
+        Nav.NavigateTo($"/store/{StoreId}");
+    }
+
+    private void ConfirmCheckin()
+    {
+        if (CurrentStore == null || !CanProceed) return;
+
+        AppState.CompleteCheckin(StoreId, PhotoPreviewDataUrl!);
+        Nav.NavigateTo($"/store/{StoreId}");
+    }
+
+    private void BackToDashboard()
+    {
+        AppState.CurrentStoreId = null;
+        Nav.NavigateTo("/dashboard");
+    }
+}

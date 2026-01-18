@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="prototipoperguntasMaui.MainShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:prototipoperguntasMaui.MauiPages"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.TabBarTitleVisible="False"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarBackgroundColor="#F8F9FA"
+    Shell.TabBarForegroundColor="#0F172A"
+    Shell.TabBarUnselectedColor="#94A3B8"
+    Shell.TabBarDisabledColor="#CBD5E1"
+    Title="prototipoperguntasMaui">
+
+    <TabBar>
+        <Tab Icon="dashboard_icon.png">
+            <ShellContent
+                Title="Questionário"
+                ContentTemplate="{DataTemplate pages:DashboardPage}"
+                Route="DashboardPage" />
+        </Tab>
+
+        <Tab Icon="settings_icon.png">
+            <ShellContent
+                Title="Configuração"
+                ContentTemplate="{DataTemplate pages:SettingsPage}"
+                Route="SettingsPage" />
+        </Tab>
+    </TabBar>
+
+</Shell>

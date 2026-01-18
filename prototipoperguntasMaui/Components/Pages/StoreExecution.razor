@@ -263,11 +263,21 @@
         CurrentStore = AppState.Stores.FirstOrDefault(s => s.Id == StoreId);
         if (CurrentStore != null)
         {
+            if (CurrentStore.Status == "REALIZADO")
+            {
+                Nav.NavigateTo("/dashboard");
+                return;
+            }
+
             if (AppState.CurrentStoreId != StoreId)
             {
-                // AppState.StartStore(StoreId); // Already called in Dashboard? 
-                // In prototype it resets tempExecution on startStore.
-                // Assuming Home calls StartStore before nav
+                AppState.ResumeVisit(StoreId);
+            }
+
+            if (!AppState.TempExecution.CheckinTime.HasValue || string.IsNullOrWhiteSpace(AppState.TempExecution.CheckinPhotoBase64))
+            {
+                Nav.NavigateTo("/dashboard");
+                return;
             }
             StartTimer();
         }
@@ -364,6 +374,27 @@
             return;
         }
 
+        var missingPresence = CurrentStore.Data.Presence.Where(sku => !AppState.TempExecution.Audit.ContainsKey(sku.Ean)).ToList();
+        if (missingPresence.Any())
+        {
+            ShowAlert($"Você precisa revisar {missingPresence.Count} itens de presença.");
+            return;
+        }
+
+        var missingPrices = CurrentStore.Data.Pricing.Where(sku => !AppState.TempExecution.Prices.ContainsKey(sku.Ean) || AppState.TempExecution.Prices[sku.Ean] <= 0).ToList();
+        if (missingPrices.Any())
+        {
+            ShowAlert($"Você precisa coletar {missingPrices.Count} preços.");
+            return;
+        }
+
+        var missingExtras = CurrentStore.Data.Extras.Where(cam => !AppState.TempExecution.Campaigns.ContainsKey(cam.Id)).ToList();
+        if (missingExtras.Any())
+        {
+            ShowAlert($"Você precisa revisar {missingExtras.Count} campanhas.");
+            return;
+        }
+
 
         ShowConfirm("Deseja finalizar a visita?", () =>
         {
@@ -374,9 +405,9 @@
 
     private void BackToDashboard()
     {
-        ShowConfirm("Sair sem salvar?", () =>
+           ShowConfirm("Pausar visita e voltar ao dashboard?", () =>
         {
-             AppState.CurrentStoreId = null;
+               AppState.PauseVisit();
              Nav.NavigateTo("/dashboard");
         });
     }

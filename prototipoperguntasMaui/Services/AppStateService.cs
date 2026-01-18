@@ -15,6 +15,7 @@ namespace prototipoperguntasMaui.Services
         public MetaData Meta { get; set; } = new();
         public List<Store> Stores { get; set; } = new();
         public List<VisitLog> ExecutionLog { get; set; } = new();
+        public Dictionary<int, TempExecution> PausedExecutions { get; set; } = new();
         
         // Simplified state management for the current execution
         public int? CurrentStoreId { get; set; }
@@ -169,20 +170,80 @@ namespace prototipoperguntasMaui.Services
 
         public void StartStore(int storeId)
         {
+            // Mantido por compatibilidade: prepara o contexto de check-in
+            PrepareCheckin(storeId);
+        }
+
+        public void PrepareCheckin(int storeId)
+        {
             CurrentStoreId = storeId;
-            var store = GetCurrentStore();
-            TempExecution = new TempExecution
+            NotifyStateChanged();
+        }
+
+        public void CompleteCheckin(int storeId, string photoBase64)
+        {
+            var store = Stores.FirstOrDefault(s => s.Id == storeId);
+            if (store == null) return;
+
+            CurrentStoreId = storeId;
+
+            if (PausedExecutions.TryGetValue(storeId, out var existingExecution))
             {
-                ArrivalTimestamp = DateTime.Now.AddMinutes(-5), // Mock
-                CheckinTime = DateTime.Now,
-                CheckinCoords = new Coords { Lat = store.Lat, Lng = store.Lng }
-            };
+                TempExecution = existingExecution;
+            }
+            else
+            {
+                TempExecution = new TempExecution();
+            }
+
+            if (!TempExecution.CheckinTime.HasValue)
+            {
+                TempExecution.ArrivalTimestamp = DateTime.Now.AddMinutes(-5); // Mock
+                TempExecution.CheckinTime = DateTime.Now;
+                TempExecution.CheckinCoords = new Coords { Lat = store.Lat, Lng = store.Lng };
+            }
+
+            TempExecution.CheckinPhotoBase64 = photoBase64;
+            EnsureExecutionDefaults(store, TempExecution);
+
+            NotifyStateChanged();
+        }
+
+        public void ResumeVisit(int storeId)
+        {
+            var store = Stores.FirstOrDefault(s => s.Id == storeId);
+            if (store == null) return;
+
+            CurrentStoreId = storeId;
+
+            if (PausedExecutions.TryGetValue(storeId, out var existingExecution))
+            {
+                TempExecution = existingExecution;
+            }
+
+            EnsureExecutionDefaults(store, TempExecution);
+            NotifyStateChanged();
+        }
+
+        public void PauseVisit()
+        {
+            var store = GetCurrentStore();
+            if (store == null) return;
+
+            store.Status = "EM_ANDAMENTO";
+            PausedExecutions[store.Id] = TempExecution;
+            CurrentStoreId = null;
+            TempExecution = new TempExecution();
+            NotifyStateChanged();
         }
 
         public bool Login(string email, string password)
         {
             // Hardcoded credentials for prototype
-            if (email == "persio.godoy@novasingular.com.br" && password == "1q2w3E#")
+            var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
+            var normalizedPassword = (password ?? string.Empty).Trim();
+
+            if (normalizedEmail == "persio.godoy@novasingular.com.br" && normalizedPassword == "1q2w3E#")
             {
                 IsLoggedIn = true;
                 if (Meta.User != null)
@@ -270,7 +331,50 @@ namespace prototipoperguntasMaui.Services
 
             ExecutionLog.Add(visitLog);
             store.Status = "REALIZADO";
+            PausedExecutions.Remove(store.Id);
             CurrentStoreId = null;
+            TempExecution = new TempExecution();
+
+            var logJson = JsonSerializer.Serialize(visitLog, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(logJson);
+            NotifyStateChanged();
+        }
+
+        public void SyncAllVisits()
+        {
+            if (ExecutionLog.Count == 0) return;
+
+            var payload = JsonSerializer.Serialize(ExecutionLog, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(payload);
+
+            foreach (var store in Stores)
+            {
+                if (store.Status == "REALIZADO")
+                {
+                    store.Status = "SYNCED";
+                }
+            }
+
+            NotifyStateChanged();
+        }
+
+        private void EnsureExecutionDefaults(Store store, TempExecution execution)
+        {
+            foreach (var sku in store.Data.Presence)
+            {
+                if (!execution.Audit.ContainsKey(sku.Ean))
+                {
+                    execution.Audit[sku.Ean] = "ABSENT";
+                }
+            }
+
+            foreach (var extra in store.Data.Extras)
+            {
+                if (!execution.Campaigns.ContainsKey(extra.Id))
+                {
+                    execution.Campaigns[extra.Id] = false;
+                }
+            }
         }
     }
 
@@ -339,6 +443,7 @@ namespace prototipoperguntasMaui.Services
     { 
         public DateTime? ArrivalTimestamp { get; set; } 
         public DateTime? CheckinTime { get; set; } 
+        public string CheckinPhotoBase64 { get; set; }
         public Dictionary<string, object> Answers { get; set; } = new(); 
         public Dictionary<string, string> Justifications { get; set; } = new(); 
         public Dictionary<string, string> Audit { get; set; } = new(); 

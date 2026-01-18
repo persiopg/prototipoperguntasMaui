@@ -1,6 +1,7 @@
 ﻿@page "/dashboard"
 @using prototipoperguntasMaui.Services
 @using System.Text.Json
+@using Microsoft.Maui.ApplicationModel
 @inject AppStateService AppState
 @inject NavigationManager Nav
 @inject IJSRuntime JS
@@ -13,9 +14,9 @@
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="font-black text-xl tracking-tight flex items-center gap-2">
-                    Trade Force <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@AppState.Meta.Device.AppVersion</span>
+                    Trade Force <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@(AppState.Meta?.Device?.AppVersion ?? "--")</span>
                 </h1>
-                <p class="text-xs text-slate-400 font-medium mt-0.5" id="user-info">Rep: @AppState.Meta.User.Uuid.Replace("colab_rep_", "") | @AppState.Meta.Cycle.Id</p>
+                <p class="text-xs text-slate-400 font-medium mt-0.5" id="user-info">Rep: @(AppState.Meta?.User?.Uuid?.Replace("colab_rep_", "") ?? "--") | @(AppState.Meta?.Cycle?.Id ?? "--")</p>
             </div>
             <div id="gps-status" class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
                 <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div> GPS ON
@@ -34,14 +35,18 @@
 
         @foreach (var store in AppState.Stores)
         {
-            var isDone = store.Status == "REALIZADO";
+            var isSynced = store.Status == "SYNCED";
+            var isDone = store.Status == "REALIZADO" || isSynced;
+            var isInProgress = store.Status == "EM_ANDAMENTO";
             var statusClass = isDone 
-                ? "border-l-8 border-l-green-500 bg-slate-100 opacity-60 grayscale-[0.5]" 
-                : "border-l-8 border-l-blue-600 bg-white hover:-translate-y-1 hover:shadow-2xl";
-            var iconBg = isDone ? "bg-green-100 text-green-600" : "bg-blue-600 text-white";
+                ? (isSynced ? "border-l-8 border-l-emerald-500 bg-slate-100 opacity-60 grayscale-[0.5]" : "border-l-8 border-l-green-500 bg-slate-100 opacity-60 grayscale-[0.5]")
+                : isInProgress
+                    ? "border-l-8 border-l-amber-500 bg-white hover:-translate-y-1 hover:shadow-2xl"
+                    : "border-l-8 border-l-blue-600 bg-white hover:-translate-y-1 hover:shadow-2xl";
+            var iconBg = isDone ? (isSynced ? "bg-emerald-100 text-emerald-600" : "bg-green-100 text-green-600") : isInProgress ? "bg-amber-500 text-white" : "bg-blue-600 text-white";
             var icon = store.Channel == "FARMA" ? "fa-prescription-bottle-medical" : "fa-cart-shopping";
 
-            <div @onclick="() => StartStore(store)" class="app-card @statusClass cursor-pointer group !p-0 fade-in">
+            <div @onclick="async () => await StartStore(store)" class="app-card @statusClass cursor-pointer group !p-0 fade-in">
                 <div class="p-6">
                     <div class="flex items-start gap-4">
                         <div class="@iconBg w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
@@ -52,9 +57,20 @@
                                 <h3 class="font-black text-slate-800 text-lg leading-tight mb-2">@store.Name</h3>
                                 @if (isDone)
                                 {
-                                    <i class="fa-solid fa-circle-check text-green-500 text-xl"></i>
+                                    <i class="fa-solid fa-circle-check @(isSynced ? "text-emerald-500" : "text-green-500") text-xl"></i>
+                                }
+                                else if (isInProgress)
+                                {
+                                    <span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide">EM ANDAMENTO</span>
                                 }
                             </div>
+
+                            @if (isSynced)
+                            {
+                                <div class="mt-1">
+                                    <span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100 tracking-wide">SYNCED</span>
+                                </div>
+                            }
                             
                             <div class="flex flex-wrap gap-2 mb-3">
                                  <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md border border-slate-200 tracking-wide">@store.Channel</span>
@@ -69,15 +85,15 @@
                 
                 @if (!isDone)
                 {
-                    <div class="bg-blue-50/50 px-6 py-3 border-t border-blue-100 flex justify-between items-center group-hover:bg-blue-50 transition-colors">
-                        <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Iniciar Visita</span>
-                        <i class="fa-solid fa-arrow-right text-blue-600 group-hover:translate-x-1 transition-transform"></i>
+                    <div class="@(isInProgress ? "bg-amber-50/50 border-amber-100 group-hover:bg-amber-50" : "bg-blue-50/50 border-blue-100 group-hover:bg-blue-50") px-6 py-3 border-t flex justify-between items-center transition-colors">
+                        <span class="text-xs font-bold @(isInProgress ? "text-amber-600" : "text-blue-600") uppercase tracking-wider">@(isInProgress ? "Retomar Visita" : "Iniciar Visita")</span>
+                        <i class="fa-solid fa-arrow-right @(isInProgress ? "text-amber-600" : "text-blue-600") group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 }
             </div>
         }
 
-        @if (AppState.Stores.All(s => s.Status == "REALIZADO") && AppState.Stores.Count > 0)
+        @if (AppState.Stores.All(s => s.Status == "REALIZADO" || s.Status == "SYNCED") && AppState.Stores.Count > 0)
         {
             <div class="mt-8 fade-in px-1">
                 <button @onclick="GenerateFinalJson" class="w-full bg-slate-800 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.02] transition duration-300 flex items-center justify-center gap-3">
@@ -151,11 +167,58 @@
         AppState.OnChange -= StateHasChanged;
     }
 
-    private void StartStore(Store store)
+    private async Task StartStore(Store store)
     {
-        if (store.Status == "REALIZADO") return; // Prevent re-entry if desired, or allow view only
-        AppState.StartStore(store.Id);
-        Nav.NavigateTo($"/store/{store.Id}");
+        if (store.Status == "REALIZADO" || store.Status == "SYNCED") return; // Prevent re-entry if desired, or allow view only
+
+        if (store.Status == "EM_ANDAMENTO")
+        {
+            AppState.ResumeVisit(store.Id);
+            Nav.NavigateTo($"/store/{store.Id}");
+            return;
+        }
+
+        AppState.PrepareCheckin(store.Id);
+
+        try
+        {
+            var permission = await Permissions.RequestAsync<Permissions.Camera>();
+            if (permission != PermissionStatus.Granted)
+            {
+                ShowDialogMessage("Permissão de câmera negada.");
+                return;
+            }
+
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                ShowDialogMessage("Captura de câmera não suportada neste dispositivo.");
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
+            {
+                Title = "Foto da Fachada"
+            });
+
+            if (photo == null)
+            {
+                ShowDialogMessage("É necessário tirar uma foto para iniciar a visita.");
+                return;
+            }
+
+            using var stream = await photo.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            var dataUrl = $"data:{photo.ContentType};base64,{base64}";
+
+            AppState.CompleteCheckin(store.Id, dataUrl);
+            Nav.NavigateTo($"/store/{store.Id}");
+        }
+        catch (Exception)
+        {
+            ShowDialogMessage("Não foi possível abrir a câmera.");
+        }
     }
 
     private void GenerateFinalJson()
@@ -202,6 +265,7 @@
         };
         JsonOutput = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
         ShowJsonModal = true;
+        AppState.SyncAllVisits();
     }
 
     private void CloseJsonModal() => ShowJsonModal = false;

@@ -56,6 +56,16 @@
                 }
         };
     </script>
+    <script>
+        window.checkin = {
+            openCamera: function () {
+                const input = document.querySelector('input[type="file"]');
+                if (input) {
+                    input.click();
+                }
+            }
+        };
+    </script>
 </head>
 
 <body>

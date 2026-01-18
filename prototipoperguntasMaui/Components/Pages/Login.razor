@@ -87,9 +87,6 @@
     
     private void SwitchToMainApp()
     {
-        if (Application.Current != null)
-        {
-            Application.Current.MainPage = new AppShell();
-        }
+        Nav.NavigateTo("/dashboard");
     }
 }

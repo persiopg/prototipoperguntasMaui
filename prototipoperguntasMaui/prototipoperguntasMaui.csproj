@@ -67,6 +67,9 @@
       <MauiXaml Update="AppShell.xaml">
         <Generator>MSBuild:Compile</Generator>
       </MauiXaml>
+      <MauiXaml Update="MainShell.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
       <MauiXaml Update="MauiPages\DashboardPage.xaml">
         <Generator>MSBuild:Compile</Generator>
       </MauiXaml>
