@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>prototipoperguntasMaui</title>
+    <base href="/" />
+    <!-- <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" /> -->
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="prototipoperguntasMaui.styles.css" />
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #F3F4F6; font-family: 'Inter', sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background: #F3F4F6; min-height: 100vh; position: relative; box-shadow: 0 0 25px rgba(0,0,0,0.1); }
+        
+        /* CARD PRINCIPAL - Design Reforçado */
+        .app-card { 
+            @apply bg-white rounded-2xl p-6 mb-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-white transition-all duration-300 relative overflow-hidden;
+        }
+        
+        /* Efeito de Card Respondido/Concluído */
+        .app-card.completed {
+            @apply border-l-8 border-l-blue-500 pl-4 bg-slate-50/80;
+        }
+
+        .section-header { 
+            @apply flex items-center gap-3 text-xs font-black text-slate-400 uppercase tracking-widest mb-4 mt-8 px-2;
+        }
+        
+        .section-header::after {
+            content: '';
+            @apply flex-grow h-px bg-slate-200;
+        }
+
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <script>
+        window.clipboardCopy = {
+            copyText: function(text) {
+                return navigator.clipboard.writeText(text)
+                .then(function() {
+                        return true;
+                    })
+                .catch(function(error) {
+                        return false;
+                    });
+                }
+        };
+    </script>
+</head>
+
+<body>
+
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+</body>
+
+</html>

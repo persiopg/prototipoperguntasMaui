@@ -1,0 +1,409 @@
+@page "/store/{StoreId:int}"
+@using prototipoperguntasMaui.Services
+@inject AppStateService AppState
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="mobile-container flex flex-col min-h-screen">
+    
+    @if (CurrentStore != null)
+    {
+        <!-- Sticky Header Loja -->
+        <div class="sticky top-0 z-40 bg-[#F3F4F6]/95 backdrop-blur-md px-5 py-3 flex justify-between items-center shadow-sm border-b border-white/50">
+            <button @onclick="BackToDashboard" class="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-bold transition text-sm py-2">
+                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid fa-chevron-left"></i></div>
+                Voltar
+            </button>
+            <div class="bg-white border border-slate-200 pl-2 pr-3 py-1.5 rounded-full text-xs font-mono font-bold text-slate-600 shadow-sm flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <span>@TimerString</span>
+            </div>
+        </div>
+
+        <div class="p-5 pb-32 overflow-y-auto flex-grow" id="store-content">
+            <!-- Card Info Loja -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-3xl p-6 mb-8 shadow-xl shadow-blue-200 mt-4 fade-in relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 opacity-20 transform rotate-12">
+                    <i class="fa-solid fa-store text-[140px]"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-white/20 mb-2 inline-block">@CurrentStore.Channel</span>
+                    <h2 class="font-black text-2xl mb-1 leading-none tracking-tight">@CurrentStore.Name</h2>
+                    <p class="text-blue-200 text-xs font-medium mt-2 flex items-center gap-2">
+                        <i class="fa-regular fa-clock"></i> Chegada: @(AppState.TempExecution.CheckinTime?.ToString("HH:mm") ?? "--:--")
+                    </p>
+                </div>
+            </div>
+
+            <!-- 1. POSICIONAMENTO -->
+            @if (CurrentStore.Data.Positioning.Any())
+            {
+                <div class="section-header text-blue-500"><i class="fa-solid fa-eye"></i> Posicionamento</div>
+                @for (int i = 0; i < CurrentStore.Data.Positioning.Count; i++)
+                {
+                    var q = CurrentStore.Data.Positioning[i];
+                    var rawAns = AppState.TempExecution.Answers.ContainsKey(q.Id) ? AppState.TempExecution.Answers[q.Id] : null;
+                    
+                    <div class="app-card @(rawAns != null ? "completed border-l-blue-500" : "") fade-in">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-50">
+                            <span class="text-[10px] font-black bg-slate-800 text-white px-2 py-1 rounded uppercase tracking-wider">@q.Context</span>
+                            <span class="text-[10px] font-bold text-slate-400">#@(i + 1) de @CurrentStore.Data.Positioning.Count</span>
+                        </div>
+                        
+                        <h3 class="font-bold text-slate-800 text-lg mb-3 leading-snug">@q.Text</h3>
+                        
+                        <div class="bg-blue-50 rounded-xl p-3 mb-6 flex gap-3 items-start">
+                             <i class="fa-solid fa-circle-info text-blue-400 mt-0.5 text-sm"></i>
+                             <p class="text-xs text-slate-600 font-medium leading-relaxed">@q.Guidance</p>
+                        </div>
+                        
+                        @if (q.Options != null && q.Options.Any())
+                        {
+                            <div class="grid grid-cols-1 gap-3">
+                                @foreach(var opt in q.Options)
+                                {
+                                    var isSelected = rawAns?.ToString() == opt;
+                                    <button @onclick="() => AnswerPos(q.Id, opt)" class="py-3 px-4 rounded-xl border-2 font-bold text-sm text-left transition-all duration-200 shadow-sm active:scale-95 @(isSelected ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-100" : "bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:text-blue-600")">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center @(isSelected ? "border-white" : "border-slate-300")">
+                                                @if(isSelected) { <div class="w-2.5 h-2.5 rounded-full bg-white"></div> }
+                                            </div>
+                                            @opt
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            var ansBool = rawAns as bool?;
+                            <div class="grid grid-cols-2 gap-4">
+                                <button @onclick="() => AnswerPos(q.Id, true)" class="py-4 rounded-xl border-2 font-black text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm active:scale-95 @(ansBool == true ? "bg-blue-600 text-white border-blue-600 ring-4 ring-blue-100" : "bg-white text-slate-400 border-slate-100 hover:border-blue-200 hover:text-blue-500")">
+                                    <i class="fa-solid fa-thumbs-up @(ansBool == true ? "animate-bounce" : "")"></i> SIM
+                                </button>
+                                <button @onclick="() => AnswerPos(q.Id, false)" class="py-4 rounded-xl border-2 font-black text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm active:scale-95 @(ansBool == false ? "bg-red-500 text-white border-red-500 ring-4 ring-red-100" : "bg-white text-slate-400 border-slate-100 hover:border-red-200 hover:text-red-500")">
+                                    <i class="fa-solid fa-thumbs-down"></i> NÃO
+                                </button>
+                            </div>
+
+                            @if (ansBool == false)
+                            {
+                                <div class="mt-5 animate-in slide-in-from-top-2 fade-in bg-red-50 p-3 rounded-xl border border-red-100">
+                                    <label class="text-[10px] font-bold text-red-500 uppercase mb-1 block flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Justificativa Obrigatória</label>
+                                    <textarea value="@(AppState.TempExecution.Justifications.ContainsKey(q.Id) ? AppState.TempExecution.Justifications[q.Id] : "")" @oninput="(e) => SaveJustification(q.Id, e.Value.ToString())" rows="2" class="w-full bg-white border border-red-200 rounded-lg p-3 text-sm text-slate-700 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none transition" placeholder="Descreva o motivo..."></textarea>
+                                </div>
+                            }
+                        }
+
+                        @if (rawAns != null)
+                        {
+                            <div class="mt-5 pt-4 border-t border-slate-100 flex justify-center animate-in fade-in">
+                                <div class="flex items-center gap-2 text-slate-400 hover:text-blue-600 cursor-pointer transition group bg-slate-50 px-4 py-2 rounded-full border border-slate-100 hover:bg-white hover:shadow-md">
+                                    <i class="fa-solid fa-camera text-lg"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wide">Evidência</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+
+            <!-- 2. PRESENÇA -->
+            @if (CurrentStore.Data.Presence.Any())
+            {
+                <div class="section-header text-purple-500"><i class="fa-solid fa-boxes-stacked"></i> Presença</div>
+                @foreach (var sku in CurrentStore.Data.Presence)
+                {
+                    var isChecked = AppState.TempExecution.Audit.ContainsKey(sku.Ean) && AppState.TempExecution.Audit[sku.Ean] == "PRESENT";
+                    var cardClass = isChecked ? "completed border-l-purple-500 bg-purple-50/20" : "";
+
+                    <div @onclick="() => ToggleSku(sku.Ean)" class="app-card @cardClass flex justify-between items-center group cursor-pointer hover:shadow-md hover:border-purple-100 transition-all !p-5">
+                        <div class="w-3/4 pr-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200">@sku.Tag</span>
+                                @if (sku.Mandatory)
+                                {
+                                    <span class="text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 flex items-center gap-1"><i class="fa-solid fa-star text-[7px]"></i> Obrigatório</span>
+                                }
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug group-hover:text-purple-700 transition-colors">@sku.Name</h4>
+                            <p class="text-[10px] text-slate-400 font-mono mt-1">EAN: @sku.Ean</p>
+                        </div>
+                        
+                        <div class="relative pl-4 border-l border-slate-100">
+                            <div class="w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-300 @(isChecked ? "bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-200 rotate-0" : "bg-white border-slate-200 text-slate-200 rotate-45")">
+                                <i class="fa-solid fa-check @(isChecked ? "text-sm" : "text-xs")"></i>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- 3. PREÇO -->
+            @if (CurrentStore.Data.Pricing.Any())
+            {
+                <div class="section-header text-orange-500"><i class="fa-solid fa-tag"></i> Precificação</div>
+                @foreach (var sku in CurrentStore.Data.Pricing)
+                {
+                    var price = AppState.TempExecution.Prices.ContainsKey(sku.Ean) ? AppState.TempExecution.Prices[sku.Ean] : (decimal?)null;
+                    var hasValue = price.HasValue && price > 0;
+                    var cardClass = hasValue ? "completed border-l-orange-500" : "";
+
+                    <div class="app-card @cardClass">
+                        <p class="font-bold text-slate-800 text-sm mb-4 border-b border-slate-50 pb-2">@sku.Name</p>
+                        
+                        <div class="flex gap-4 items-end">
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Preço Coletado</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm transition-colors group-focus-within:text-orange-500">R$</span>
+                                    <input type="number" step="0.01" value="@price" @onchange="(e) => CollectPrice(sku.Ean, e.Value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-lg font-mono font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all placeholder-slate-300" placeholder="0.00" />
+                                </div>
+                            </div>
+                            <div class="text-right pb-2">
+                                 <div class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Sugerido</div>
+                                 <div class="text-xs font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 inline-block">R$ @sku.Suggested</div>
+                                 <div class="text-[9px] text-slate-400 mt-1">Min @sku.Min | Max @sku.Max</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- 4. EXTRAS -->
+            @if (CurrentStore.Data.Extras.Any())
+            {
+                <div class="section-header text-pink-500"><i class="fa-solid fa-bullhorn"></i> Extras</div>
+                @foreach (var cam in CurrentStore.Data.Extras)
+                {
+                    var isChecked = AppState.TempExecution.Campaigns.ContainsKey(cam.Id) && AppState.TempExecution.Campaigns[cam.Id];
+                    var cardClass = isChecked ? "completed border-l-pink-500 bg-pink-50/20" : "";
+                    
+                    <div class="app-card @cardClass !p-0 overflow-hidden cursor-pointer" @onclick="() => ToggleCampaign(cam.Id)">
+                        <div class="p-5 flex items-start gap-4">
+                            <div class="w-6 h-6 rounded-md border-2 transition-all duration-300 flex items-center justify-center mt-0.5 @(isChecked ? "bg-pink-500 border-pink-500 text-white shadow-md" : "border-slate-300 bg-white")">
+                                <i class="fa-solid fa-check text-xs @(isChecked ? "scale-100" : "scale-0") transition-transform"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-pink-500 font-black tracking-wide uppercase mb-1">@cam.Id</p>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">@cam.Title</h4>
+                                <p class="text-xs text-slate-500 leading-snug">@cam.Task</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl p-5 border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-[480px] md:mx-auto z-50 rounded-t-3xl">
+            <button @onclick="FinishVisit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.01] transition-all flex justify-between items-center px-8 group">
+                <span class="group-hover:translate-x-1 transition-transform">FINALIZAR VISITA</span>
+                <div class="bg-slate-800 rounded-xl w-8 h-8 flex items-center justify-center group-hover:bg-slate-700 transition-colors border border-slate-700">
+                    <i class="fa-solid fa-check text-sm text-green-400"></i>
+                </div>
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="p-10 flex flex-col items-center justify-center h-screen">
+            <h1 class="text-xl font-bold">Loja não encontrada</h1>
+            <button @onclick="() => Nav.NavigateTo((string)null)" class="mt-4 bg-blue-500 text-white p-2 rounded">Voltar</button>
+        </div>
+    }
+
+    <!-- Dialog Modal -->
+    @if (ShowDialog)
+    {
+        <div class="fixed inset-0 bg-slate-900/80 z-[80] flex items-center justify-center p-6 backdrop-blur-md">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 animate-[fadeIn_0.2s_ease-out]">
+                <div class="p-8 text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 mb-6 shadow-inner">
+                        <i class="fa-solid fa-circle-info text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 mb-2">Atenção</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">@DialogMessage</p>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-center border-t border-slate-100">
+                    @if (DialogIsConfirm)
+                    {
+                        <button type="button" @onclick="DialogCancel" class="flex-1 justify-center rounded-xl border border-slate-300 px-4 py-3 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 focus:outline-none transition">
+                            Cancelar
+                        </button>
+                        <button type="button" @onclick="DialogConfirm" class="flex-1 justify-center rounded-xl border border-transparent px-4 py-3 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none shadow-lg shadow-blue-200 transition">
+                            Confirmar
+                        </button>
+                    }
+                    else
+                    {
+                         <button type="button" @onclick="DialogCancel" class="flex-1 justify-center rounded-xl border border-transparent px-4 py-3 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none shadow-lg shadow-blue-200 transition">
+                            OK
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int StoreId { get; set; }
+    private Store CurrentStore;
+    private System.Threading.Timer Timer;
+    private string TimerString = "00:00";
+    
+    private bool ShowDialog = false;
+    private string DialogMessage = "";
+    private bool DialogIsConfirm = false;
+    private Action OnDialogConfirm;
+
+    protected override void OnInitialized()
+    {
+        CurrentStore = AppState.Stores.FirstOrDefault(s => s.Id == StoreId);
+        if (CurrentStore != null)
+        {
+            if (AppState.CurrentStoreId != StoreId)
+            {
+                // AppState.StartStore(StoreId); // Already called in Dashboard? 
+                // In prototype it resets tempExecution on startStore.
+                // Assuming Home calls StartStore before nav
+            }
+            StartTimer();
+        }
+    }
+
+    private void StartTimer()
+    {
+        Timer = new System.Threading.Timer(_ =>
+        {
+            if (AppState.TempExecution.CheckinTime.HasValue)
+            {
+                var diff = DateTime.Now - AppState.TempExecution.CheckinTime.Value;
+                InvokeAsync(() =>
+                {
+                    TimerString = $"{(int)diff.TotalMinutes:D2}:{diff.Seconds:D2}";
+                    StateHasChanged();
+                });
+            }
+        }, null, 0, 1000);
+    }
+
+    public void Dispose()
+    {
+        Timer?.Dispose();
+    }
+
+    private void AnswerPos(string id, object value)
+    {
+        if (AppState.TempExecution.Answers.ContainsKey(id))
+            AppState.TempExecution.Answers[id] = value;
+        else
+            AppState.TempExecution.Answers.Add(id, value);
+    }
+
+    private void SaveJustification(string id, string text)
+    {
+        if (AppState.TempExecution.Justifications.ContainsKey(id))
+            AppState.TempExecution.Justifications[id] = text;
+        else
+            AppState.TempExecution.Justifications.Add(id, text);
+    }
+
+    private void ToggleSku(string ean)
+    {
+        var current = AppState.TempExecution.Audit.ContainsKey(ean) && AppState.TempExecution.Audit[ean] == "PRESENT";
+        if (AppState.TempExecution.Audit.ContainsKey(ean))
+            AppState.TempExecution.Audit[ean] = !current ? "PRESENT" : "ABSENT";
+        else
+            AppState.TempExecution.Audit.Add(ean, "PRESENT");
+    }
+
+    private void CollectPrice(string ean, object value)
+    {
+        if (decimal.TryParse(value?.ToString(), out decimal val))
+        {
+            if (AppState.TempExecution.Prices.ContainsKey(ean))
+                AppState.TempExecution.Prices[ean] = val;
+            else
+                AppState.TempExecution.Prices.Add(ean, val);
+        }
+        else
+        {
+            AppState.TempExecution.Prices.Remove(ean);
+        }
+    }
+
+    private void ToggleCampaign(string id)
+    {
+        var current = AppState.TempExecution.Campaigns.ContainsKey(id) && AppState.TempExecution.Campaigns[id];
+        if (AppState.TempExecution.Campaigns.ContainsKey(id))
+            AppState.TempExecution.Campaigns[id] = !current;
+        else
+            AppState.TempExecution.Campaigns.Add(id, true); // true if toggled on
+    }
+
+    private void FinishVisit()
+    {
+        var unanswered = CurrentStore.Data.Positioning.Where(q => !AppState.TempExecution.Answers.ContainsKey(q.Id)).ToList();
+        if (unanswered.Any())
+        {
+            ShowAlert($"Você precisa responder {unanswered.Count} perguntas de posicionamento.");
+            return;
+        }
+
+        var unjustified = CurrentStore.Data.Positioning.Where(q => 
+            AppState.TempExecution.Answers.ContainsKey(q.Id) && 
+            AppState.TempExecution.Answers[q.Id] is bool b && b == false && 
+            (!AppState.TempExecution.Justifications.ContainsKey(q.Id) || string.IsNullOrWhiteSpace(AppState.TempExecution.Justifications[q.Id]))
+        ).ToList();
+
+        if (unjustified.Any())
+        {
+            ShowAlert("Há respostas negativas sem justificativa.");
+            return;
+        }
+
+
+        ShowConfirm("Deseja finalizar a visita?", () =>
+        {
+            AppState.FinishVisit();
+            Nav.NavigateTo("/dashboard");
+        });
+    }
+
+    private void BackToDashboard()
+    {
+        ShowConfirm("Sair sem salvar?", () =>
+        {
+             AppState.CurrentStoreId = null;
+             Nav.NavigateTo("/dashboard");
+        });
+    }
+
+    private void ShowAlert(string msg)
+    {
+        DialogMessage = msg;
+        DialogIsConfirm = false;
+        ShowDialog = true;
+    }
+
+    private void ShowConfirm(string msg, Action onConfirm)
+    {
+        DialogMessage = msg;
+        DialogIsConfirm = true;
+        OnDialogConfirm = onConfirm;
+        ShowDialog = true;
+    }
+
+    private void DialogConfirm()
+    {
+        ShowDialog = false;
+        OnDialogConfirm?.Invoke();
+    }
+
+    private void DialogCancel()
+    {
+        ShowDialog = false;
+    }
+}
