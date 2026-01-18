@@ -1,5 +1,7 @@
 @page "/"
 @using prototipoperguntasMaui.Services
+@using Microsoft.Maui.Controls
+@using Microsoft.Maui
 @inject AppStateService AppState
 @inject NavigationManager Nav
 
@@ -66,7 +68,8 @@
     {
         if (AppState.IsLoggedIn)
         {
-            Nav.NavigateTo("/dashboard");
+            // Switch to AppShell directly if known logged in (e.g. persistent state)
+            SwitchToMainApp();
         }
     }
 
@@ -74,11 +77,19 @@
     {
         if (AppState.Login(Email, Password))
         {
-            Nav.NavigateTo("/dashboard");
+            SwitchToMainApp();
         }
         else
         {
             ErrorMessage = "Credenciais inválidas. Tente novamente.";
+        }
+    }
+    
+    private void SwitchToMainApp()
+    {
+        if (Application.Current != null)
+        {
+            Application.Current.MainPage = new AppShell();
         }
     }
 }

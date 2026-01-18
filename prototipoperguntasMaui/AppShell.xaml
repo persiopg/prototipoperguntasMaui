@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="prototipoperguntasMaui.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:prototipoperguntasMaui.MauiPages"
+    Shell.FlyoutBehavior="Flyout"
+    Title="prototipoperguntasMaui">
+
+    <FlyoutItem Title="Questionário" Icon="fa_clipboard_list.png">
+        <ShellContent
+            Title="Questionário"
+            ContentTemplate="{DataTemplate pages:DashboardPage}"
+            Route="DashboardPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Configuração" Icon="fa_gear.png">
+        <ShellContent
+            Title="Configuração"
+            ContentTemplate="{DataTemplate pages:SettingsPage}"
+            Route="SettingsPage" />
+    </FlyoutItem>
+
+</Shell>

@@ -17,9 +17,9 @@
                 </h1>
                 <p class="text-xs text-slate-400 font-medium mt-0.5" id="user-info">Rep: @AppState.Meta.User.Uuid.Replace("colab_rep_", "") | @AppState.Meta.Cycle.Id</p>
             </div>
-            <button @onclick="Logout" id="logout-btn" class="text-[9px] font-bold flex items-center justify-center w-8 h-8 bg-red-500/10 text-red-400 rounded-full border border-red-500/20 backdrop-blur-md hover:bg-red-500 hover:text-white transition-colors">
-                 <i class="fa-solid fa-power-off"></i>
-            </button>
+            <div id="gps-status" class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div> GPS ON
+            </div>
         </div>
     </header>
 
@@ -156,12 +156,6 @@
         if (store.Status == "REALIZADO") return; // Prevent re-entry if desired, or allow view only
         AppState.StartStore(store.Id);
         Nav.NavigateTo($"/store/{store.Id}");
-    }
-
-    private void Logout()
-    {
-        AppState.Logout();
-        Nav.NavigateTo("/");
     }
 
     private void GenerateFinalJson()
