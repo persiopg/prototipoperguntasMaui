@@ -84,6 +84,14 @@ h1:focus {
     display: none;
 }
 
+.safe-top {
+    padding-top: max(env(safe-area-inset-top), 56px);
+}
+
+.safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 24px);
+}
+
 @supports (-webkit-touch-callout: none) {
     .status-bar-safe-area {
         display: flex;

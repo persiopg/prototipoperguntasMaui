@@ -1,5 +1,8 @@
 @page "/store/{StoreId:int}"
 @using prototipoperguntasMaui.Services
+@using Microsoft.Maui.ApplicationModel
+@using System
+@using System.IO
 @inject AppStateService AppState
 @inject NavigationManager Nav
 @inject IJSRuntime JS
@@ -9,35 +12,41 @@
     
     @if (CurrentStore != null)
     {
-        <!-- Sticky Header Loja -->
-        <div class="sticky top-0 z-40 bg-[#F3F4F6]/95 backdrop-blur-md px-5 py-3 flex justify-between items-center shadow-sm border-b border-white/50">
-            <button @onclick="BackToDashboard" class="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-bold transition text-sm py-2">
-                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid fa-chevron-left"></i></div>
-                Voltar
-            </button>
-            <div class="bg-white border border-slate-200 pl-2 pr-3 py-1.5 rounded-full text-xs font-mono font-bold text-slate-600 shadow-sm flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                <span>@TimerString</span>
+        <!-- Topo Fixo (Voltar + Timer + Card da Loja) -->
+        <div class="sticky top-0 z-40 bg-[#F3F4F6]">
+            <div class="bg-[#F3F4F6]/95 backdrop-blur-md px-5 py-3 flex justify-between items-center shadow-sm border-b border-white/50 safe-top">
+                <button @onclick="BackToDashboard" class="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-bold transition text-sm py-2">
+                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid fa-chevron-left"></i></div>
+                    Voltar
+                </button>
+                <div class="bg-white border border-slate-200 pl-2 pr-3 py-1.5 rounded-full text-xs font-mono font-bold text-slate-600 shadow-sm flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <span>@TimerString</span>
+                </div>
+            </div>
+
+            <div class="px-5 pb-4">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-3xl p-6 shadow-xl shadow-blue-200 fade-in relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 opacity-20 transform rotate-12">
+                        <i class="fa-solid fa-store text-[140px]"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-white/20 mb-2 inline-block">@CurrentStore.Channel</span>
+                        <h2 class="font-black text-2xl mb-1 leading-none tracking-tight">@CurrentStore.Name</h2>
+                        <p class="text-blue-200 text-xs font-medium mt-2 flex items-center gap-2">
+                            <i class="fa-regular fa-clock"></i> Chegada: @(AppState.TempExecution.CheckinTime?.ToString("HH:mm") ?? "--:--")
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="p-5 pb-32 overflow-y-auto flex-grow" id="store-content">
-            <!-- Card Info Loja -->
-            <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-3xl p-6 mb-8 shadow-xl shadow-blue-200 mt-4 fade-in relative overflow-hidden">
-                <div class="absolute -right-6 -top-6 opacity-20 transform rotate-12">
-                    <i class="fa-solid fa-store text-[140px]"></i>
-                </div>
-                <div class="relative z-10">
-                    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-white/20 mb-2 inline-block">@CurrentStore.Channel</span>
-                    <h2 class="font-black text-2xl mb-1 leading-none tracking-tight">@CurrentStore.Name</h2>
-                    <p class="text-blue-200 text-xs font-medium mt-2 flex items-center gap-2">
-                        <i class="fa-regular fa-clock"></i> Chegada: @(AppState.TempExecution.CheckinTime?.ToString("HH:mm") ?? "--:--")
-                    </p>
-                </div>
-            </div>
+
+
 
             <!-- 1. POSICIONAMENTO -->
-            @if (CurrentStore.Data.Positioning.Any())
+            @if (ActiveTab == "POSICIONAMENTO" && CurrentStore.Data.Positioning.Any())
             {
                 <div class="section-header text-blue-500"><i class="fa-solid fa-eye"></i> Posicionamento</div>
                 @for (int i = 0; i < CurrentStore.Data.Positioning.Count; i++)
@@ -45,7 +54,7 @@
                     var q = CurrentStore.Data.Positioning[i];
                     var rawAns = AppState.TempExecution.Answers.ContainsKey(q.Id) ? AppState.TempExecution.Answers[q.Id] : null;
                     
-                    <div class="app-card @(rawAns != null ? "completed border-l-blue-500" : "") fade-in">
+                    <div class="app-card @(rawAns != null ? "completed border-l-blue-500" : "") fade-in mb-6">
                         <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-50">
                             <span class="text-[10px] font-black bg-slate-800 text-white px-2 py-1 rounded uppercase tracking-wider">@q.Context</span>
                             <span class="text-[10px] font-bold text-slate-400">#@(i + 1) de @CurrentStore.Data.Positioning.Count</span>
@@ -99,9 +108,21 @@
                         @if (rawAns != null)
                         {
                             <div class="mt-5 pt-4 border-t border-slate-100 flex justify-center animate-in fade-in">
-                                <div class="flex items-center gap-2 text-slate-400 hover:text-blue-600 cursor-pointer transition group bg-slate-50 px-4 py-2 rounded-full border border-slate-100 hover:bg-white hover:shadow-md">
-                                    <i class="fa-solid fa-camera text-lg"></i>
-                                    <span class="text-[10px] font-bold uppercase tracking-wide">Evidência</span>
+                                <div class="flex items-center gap-3">
+                                    <button @onclick="async () => await CaptureEvidence(q.Id)" class="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition group bg-slate-50 px-4 py-2 rounded-full border border-slate-100 hover:bg-white hover:shadow-md">
+                                        <i class="fa-solid fa-camera text-lg"></i>
+                                        <span class="text-[10px] font-bold uppercase tracking-wide">Evidência</span>
+                                    </button>
+
+                                    @if (AppState.TempExecution.EvidencePhotos.ContainsKey(q.Id))
+                                    {
+                                        <div class="flex items-center gap-2">
+                                            <img src="@AppState.TempExecution.EvidencePhotos[q.Id]" @onclick="() => OpenEvidencePreview(q.Id)" class="w-12 h-12 rounded-lg border border-slate-200 object-cover cursor-pointer" />
+                                            <button @onclick="() => ConfirmReplaceEvidence(q.Id)" class="text-[10px] font-bold text-red-500 bg-red-50 px-3 py-2 rounded-full border border-red-100 hover:bg-red-100 transition">
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -110,7 +131,7 @@
             }
 
             <!-- 2. PRESENÇA -->
-            @if (CurrentStore.Data.Presence.Any())
+            @if (ActiveTab == "PRESENCA" && CurrentStore.Data.Presence.Any())
             {
                 <div class="section-header text-purple-500"><i class="fa-solid fa-boxes-stacked"></i> Presença</div>
                 @foreach (var sku in CurrentStore.Data.Presence)
@@ -141,7 +162,7 @@
             }
 
             <!-- 3. PREÇO -->
-            @if (CurrentStore.Data.Pricing.Any())
+            @if (ActiveTab == "PRECIFICACAO" && CurrentStore.Data.Pricing.Any())
             {
                 <div class="section-header text-orange-500"><i class="fa-solid fa-tag"></i> Precificação</div>
                 @foreach (var sku in CurrentStore.Data.Pricing)
@@ -172,7 +193,7 @@
             }
 
             <!-- 4. EXTRAS -->
-            @if (CurrentStore.Data.Extras.Any())
+            @if (ActiveTab == "PRECIFICACAO" && CurrentStore.Data.Extras.Any())
             {
                 <div class="section-header text-pink-500"><i class="fa-solid fa-bullhorn"></i> Extras</div>
                 @foreach (var cam in CurrentStore.Data.Extras)
@@ -196,13 +217,13 @@
             }
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl p-5 border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-[480px] md:mx-auto z-50 rounded-t-3xl">
-            <button @onclick="FinishVisit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.01] transition-all flex justify-between items-center px-8 group">
-                <span class="group-hover:translate-x-1 transition-transform">FINALIZAR VISITA</span>
-                <div class="bg-slate-800 rounded-xl w-8 h-8 flex items-center justify-center group-hover:bg-slate-700 transition-colors border border-slate-700">
-                    <i class="fa-solid fa-check text-sm text-green-400"></i>
-                </div>
-            </button>
+        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl p-4 border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-[480px] md:mx-auto z-50 rounded-t-3xl safe-bottom">
+            <div class="grid grid-cols-4 gap-2">
+                <button @onclick="() => SetTab(TabPosicionamento)" class="py-2.5 rounded-xl text-[10px] font-bold transition @(ActiveTab == TabPosicionamento ? "bg-blue-600 text-white shadow" : "bg-slate-50 text-slate-500 hover:bg-slate-100")">Posic.</button>
+                <button @onclick="() => SetTab(TabPresenca)" class="py-2.5 rounded-xl text-[10px] font-bold transition @(ActiveTab == TabPresenca ? "bg-purple-600 text-white shadow" : "bg-slate-50 text-slate-500 hover:bg-slate-100")">Presença</button>
+                <button @onclick="() => SetTab(TabPrecificacao)" class="py-2.5 rounded-xl text-[10px] font-bold transition @(ActiveTab == TabPrecificacao ? "bg-orange-500 text-white shadow" : "bg-slate-50 text-slate-500 hover:bg-slate-100")">Preço</button>
+                <button @onclick="FinishVisit" class="py-2.5 rounded-xl text-[10px] font-black bg-slate-900 text-white shadow hover:bg-black transition">Finalizar</button>
+            </div>
         </div>
     }
     else
@@ -245,6 +266,21 @@
             </div>
         </div>
     }
+
+    @if (ShowEvidencePreview && !string.IsNullOrWhiteSpace(EvidencePreviewUrl))
+    {
+        <div class="fixed inset-0 bg-black/90 z-[90] flex items-center justify-center p-4">
+            <button @onclick="CloseEvidencePreview" class="absolute top-6 right-6 text-white/80 hover:text-white text-2xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="w-full max-w-[520px] flex flex-col items-center gap-4">
+                <img src="@EvidencePreviewUrl" class="w-full max-h-[80vh] object-contain rounded-2xl border border-white/10" />
+                <button @onclick="DeleteEvidenceFromPreview" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-700 transition">
+                    Excluir foto
+                </button>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -257,6 +293,13 @@
     private string DialogMessage = "";
     private bool DialogIsConfirm = false;
     private Action OnDialogConfirm;
+    private bool ShowEvidencePreview = false;
+    private string? EvidencePreviewUrl;
+    private string? EvidencePreviewQuestionId;
+    private const string TabPosicionamento = "POSICIONAMENTO";
+    private const string TabPresenca = "PRESENCA";
+    private const string TabPrecificacao = "PRECIFICACAO";
+    private string ActiveTab = TabPosicionamento;
 
     protected override void OnInitialized()
     {
@@ -353,6 +396,53 @@
             AppState.TempExecution.Campaigns.Add(id, true); // true if toggled on
     }
 
+    private async Task CaptureEvidence(string questionId)
+    {
+        try
+        {
+            var permission = await Permissions.RequestAsync<Permissions.Camera>();
+            if (permission != PermissionStatus.Granted)
+            {
+                ShowAlert("Permissão de câmera negada.");
+                return;
+            }
+
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                ShowAlert("Captura de câmera não suportada neste dispositivo.");
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
+            {
+                Title = "Foto de Evidência"
+            });
+
+            if (photo == null) return;
+
+            using var stream = await photo.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            var dataUrl = $"data:{photo.ContentType};base64,{base64}";
+
+            AppState.TempExecution.EvidencePhotos[questionId] = dataUrl;
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Não foi possível abrir a câmera. {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private void ConfirmReplaceEvidence(string questionId)
+    {
+        ShowConfirm("Reenviar foto?", async () =>
+        {
+            AppState.TempExecution.EvidencePhotos.Remove(questionId);
+            await CaptureEvidence(questionId);
+        });
+    }
+
     private void FinishVisit()
     {
         var unanswered = CurrentStore.Data.Positioning.Where(q => !AppState.TempExecution.Answers.ContainsKey(q.Id)).ToList();
@@ -436,5 +526,33 @@
     private void DialogCancel()
     {
         ShowDialog = false;
+    }
+
+    private void SetTab(string tab)
+    {
+        ActiveTab = tab;
+    }
+
+    private void OpenEvidencePreview(string questionId)
+    {
+        if (!AppState.TempExecution.EvidencePhotos.ContainsKey(questionId)) return;
+        EvidencePreviewQuestionId = questionId;
+        EvidencePreviewUrl = AppState.TempExecution.EvidencePhotos[questionId];
+        ShowEvidencePreview = true;
+    }
+
+    private void CloseEvidencePreview()
+    {
+        ShowEvidencePreview = false;
+        EvidencePreviewUrl = null;
+        EvidencePreviewQuestionId = null;
+    }
+
+    private void DeleteEvidenceFromPreview()
+    {
+        if (string.IsNullOrWhiteSpace(EvidencePreviewQuestionId)) return;
+        var questionId = EvidencePreviewQuestionId;
+        CloseEvidencePreview();
+        ConfirmReplaceEvidence(questionId);
     }
 }

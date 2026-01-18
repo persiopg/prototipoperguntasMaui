@@ -444,6 +444,7 @@ namespace prototipoperguntasMaui.Services
         public DateTime? ArrivalTimestamp { get; set; } 
         public DateTime? CheckinTime { get; set; } 
         public string CheckinPhotoBase64 { get; set; }
+        public Dictionary<string, string> EvidencePhotos { get; set; } = new();
         public Dictionary<string, object> Answers { get; set; } = new(); 
         public Dictionary<string, string> Justifications { get; set; } = new(); 
         public Dictionary<string, string> Audit { get; set; } = new(); 
