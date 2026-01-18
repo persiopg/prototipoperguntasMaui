@@ -1,3 +1,31 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
 
-@Body
+<div class="app-shell">
+	<div class="app-content">
+		@Body
+	</div>
+
+	@if (ShowBottomNav)
+	{
+		<nav class="bottom-nav">
+			<a class="bottom-nav__item @(IsActive("/dashboard") ? "active" : "")" href="/dashboard">
+				<i class="fa-solid fa-house"></i>
+				<span>Dashboard</span>
+			</a>
+			<a class="bottom-nav__item @(IsActive("/settings") ? "active" : "")" href="/settings">
+				<i class="fa-solid fa-gear"></i>
+				<span>Ajustes</span>
+			</a>
+		</nav>
+	}
+</div>
+
+@code {
+	private bool ShowBottomNav => Nav.Uri.Contains("/dashboard") || Nav.Uri.Contains("/settings");
+
+	private bool IsActive(string route)
+	{
+		return Nav.Uri.EndsWith(route, StringComparison.OrdinalIgnoreCase);
+	}
+}
