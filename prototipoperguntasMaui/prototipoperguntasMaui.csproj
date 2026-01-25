@@ -78,4 +78,8 @@
       </MauiXaml>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\image\" />
+    </ItemGroup>
+
 </Project>

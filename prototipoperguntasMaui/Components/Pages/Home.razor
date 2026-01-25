@@ -12,16 +12,22 @@
 <div class="mobile-container flex flex-col">
     
     <!-- Header Principal -->
-    <header class="bg-slate-900 text-white px-5 py-4 sticky top-0 z-50 shadow-xl rounded-b-3xl mx-[-1px] safe-top">
+    <header class="bg-slate-900 text-white px-5 py-4 sticky top-0 z-50 shadow-xl rounded-b-3xl mx-[-1px] safe-top pt-[40px]">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="font-black text-xl tracking-tight flex items-center gap-2">
-                    Trade Force <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@(AppState.Meta?.Device?.AppVersion ?? "--")</span>
+                    <img src="image/logo-GB.svg" alt="Logo GB" class="h-6 object-contain" />
+                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@(AppState.Meta?.Device?.AppVersion ?? "--")</span>
                 </h1>
-                <p class="text-xs text-slate-400 font-medium mt-0.5" id="user-info">Rep: @(AppState.Meta?.User?.Uuid?.Replace("colab_rep_", "") ?? "--") | @(AppState.Meta?.Cycle?.Id ?? "--")</p>
+                <p class="text-xs text-slate-400 font-medium mt-2" id="user-info">Rep: @(AppState.Meta?.User?.Uuid?.Replace("colab_rep_", "") ?? "--") | @(AppState.Meta?.Cycle?.Id ?? "--")</p>
             </div>
-            <div id="gps-status" class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
-                <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div> GPS ON
+            <div class="flex items-center gap-2">
+                <div id="gps-status" class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div> GPS ON
+                </div>
+                <button @onclick="OpenMap" class="text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition">
+                    <i class="fa-solid fa-map-location-dot"></i> Mapa
+                </button>
             </div>
         </div>
     </header>
@@ -274,6 +280,8 @@
     }
 
     private void CloseJsonModal() => ShowJsonModal = false;
+
+    private async Task OpenMap() => await Microsoft.Maui.Controls.Shell.Current.GoToAsync(nameof(MauiPages.MapPage));
 
     private async Task CopyJson()
     {

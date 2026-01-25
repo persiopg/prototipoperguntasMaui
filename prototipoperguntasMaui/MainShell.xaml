@@ -5,7 +5,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pages="clr-namespace:prototipoperguntasMaui.MauiPages"
     Shell.FlyoutBehavior="Disabled"
-    Shell.TabBarTitleVisible="False"
     Shell.NavBarIsVisible="False"
     Shell.TabBarBackgroundColor="#F8F9FA"
     Shell.TabBarForegroundColor="#0F172A"
@@ -16,7 +15,6 @@
     <TabBar>
         <Tab Icon="dashboard_icon.png">
             <ShellContent
-                Title="Questionário"
                 ContentTemplate="{DataTemplate pages:DashboardPage}"
                 Route="DashboardPage" />
         </Tab>

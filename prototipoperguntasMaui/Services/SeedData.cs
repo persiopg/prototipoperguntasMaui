@@ -7,30 +7,33 @@ namespace prototipoperguntasMaui.Services
   "app_metadata": {
     "cycle_id": "C1_2026",
     "description": "Ciclo 1: Jan, Fev, Mar 2026 - Trade Force",
-    "version": "1.0.0",
-    "last_update": "2026-01-09T10:00:00Z"
+    "version": "1.0.1",
+    "last_update": "2026-01-24T12:00:00Z"
   },
   "stores_mock": [
     {
       "id": 101,
       "name": "FARMACIA SAO JOAO",
       "channel": "FARMA",
-      "address": "Rua das Flores, 100",
-      "lat": -23.55052, "lng": -46.63330
+      "address": "Av. Presidente Vargas, 1200, Jd. São Luiz, Ribeirão Preto - SP",
+      "lat": -21.19310,
+      "lng": -47.81450
     },
     {
       "id": 202,
       "name": "SUPERMERCADO EXTRA",
       "channel": "ALIMENTAR",
-      "address": "Av. Brasil, 500",
-      "lat": -23.56000, "lng": -46.64000
+      "address": "Av. Maurílio Biagi, 800, Santa Cruz, Ribeirão Preto - SP",
+      "lat": -21.20500,
+      "lng": -47.79800
     },
     {
       "id": 303,
       "name": "PERFUMARIA BELA",
       "channel": "PERFUMARIA",
-      "address": "Shopping Center, Loja 10",
-      "lat": -23.57000, "lng": -46.65000
+      "address": "Av. Cel. Fernando Ferreira Leite, 1540 (RibeirãoShopping), Ribeirão Preto - SP",
+      "lat": -21.21200,
+      "lng": -47.82500
     }
   ],
   "scoring_rules": {
@@ -159,26 +162,26 @@ namespace prototipoperguntasMaui.Services
     { "id": "CMP_006", "type": "CONCORRENCIA", "channel": "TODOS", "task": "Há Ponto Extra de Cabelos de L'oréal no PDV? Quantos?", "dates": { "start": "2026-01-01", "end": "2026-04-01" } }
   ],
   "products_catalog": [
-    {"ean": "7891033551538", "name": "PROMOPACK SIÀGE NUTRI ROSE + LEAVE IN", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033534357", "name": "SHAMPOO SIAGE NUTRI ROSE 250ML", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033534364", "name": "CONDICIONADOR SIAGE NUTRI ROSE 200ML", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033534371", "name": "MASCARA SIAGE NUTRI ROSE 250G", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033581214", "name": "MASCARA SIAGE NUTRI ACID 250G", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033581191", "name": "SHAMPOO SIAGE NUTRI ACID 250ML", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033581207", "name": "CONDICIONADOR SIAGE NUTRI ACID 200ML", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033016419", "name": "SHAMPOO SIAGE HAIR-PLASTIA 250ML", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033016440", "name": "MASCARA SIAGE HAIR-PLASTIA 250G", "brand": "SIAGE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033761104", "name": "KIT AG PROTETOR FPS 30 + ACELERADOR", "brand": "AG", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7891033473151", "name": "KIT AG PROTETOR CORP FPS 50 + FACIAL", "brand": "AG", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7899852022642", "name": "PÓ COMPACTO VULT V420", "brand": "VULT MAKE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7899852022659", "name": "PÓ COMPACTO VULT V430", "brand": "VULT MAKE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7899852024035", "name": "MÁSCARA CÍLIOS VULT VOLUME UP", "brand": "VULT MAKE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7899852022543", "name": "BASE MATTE HIDRALURONIC V200", "brand": "VULT MAKE", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"]},
-    {"ean": "7899852025452", "name": "SHAMPOO VULT CABELOS LISO 350ML", "brand": "VULT CABELOS", "rules": {"presence": true, "price": true}, "channels": ["ALIMENTAR", "FARMA"]},
-    {"ean": "7899852025506", "name": "CONDICIONADOR VULT CABELOS LISO 325ML", "brand": "VULT CABELOS", "rules": {"presence": true, "price": true}, "channels": ["ALIMENTAR", "FARMA"]},
-    {"ean": "7891033932757", "name": "BASE NIINA SECRETS HD/GLOW COR 05", "brand": "NIINA SECRETS MAKE", "rules": {"presence": true, "price": true}, "channels": ["PERFUMARIA", "DEPTO"]},
-    {"ean": "7891033540037", "name": "BATOM LIQ NIINA SECRETS SKINNY MATTE HIBISCO", "brand": "NIINA SECRETS MAKE", "rules": {"presence": true, "price": true}, "channels": ["PERFUMARIA", "DEPTO"]},
-    {"ean": "7891033519286", "name": "PAMPERS SAB LIQ GLICERINA 200ML", "brand": "PAMPERS", "rules": {"presence": true, "price": true}, "channels": ["FARMA", "ALIMENTAR"]}
+    { "ean": "7891033551538", "name": "PROMOPACK SIÀGE NUTRI ROSE + LEAVE IN", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033534357", "name": "SHAMPOO SIAGE NUTRI ROSE 250ML", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033534364", "name": "CONDICIONADOR SIAGE NUTRI ROSE 200ML", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033534371", "name": "MASCARA SIAGE NUTRI ROSE 250G", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033581214", "name": "MASCARA SIAGE NUTRI ACID 250G", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033581191", "name": "SHAMPOO SIAGE NUTRI ACID 250ML", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033581207", "name": "CONDICIONADOR SIAGE NUTRI ACID 200ML", "brand": "SIAGE", "tag": "LANCAMENTO", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033016419", "name": "SHAMPOO SIAGE HAIR-PLASTIA 250ML", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033016440", "name": "MASCARA SIAGE HAIR-PLASTIA 250G", "brand": "SIAGE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033761104", "name": "KIT AG PROTETOR FPS 30 + ACELERADOR", "brand": "AG", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7891033473151", "name": "KIT AG PROTETOR CORP FPS 50 + FACIAL", "brand": "AG", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7899852022642", "name": "PÓ COMPACTO VULT V420", "brand": "VULT MAKE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7899852022659", "name": "PÓ COMPACTO VULT V430", "brand": "VULT MAKE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7899852024035", "name": "MÁSCARA CÍLIOS VULT VOLUME UP", "brand": "VULT MAKE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7899852022543", "name": "BASE MATTE HIDRALURONIC V200", "brand": "VULT MAKE", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "PERFUMARIA", "DEPTO", "ALIMENTAR"] },
+    { "ean": "7899852025452", "name": "SHAMPOO VULT CABELOS LISO 350ML", "brand": "VULT CABELOS", "rules": { "presence": true, "price": true }, "channels": ["ALIMENTAR", "FARMA"] },
+    { "ean": "7899852025506", "name": "CONDICIONADOR VULT CABELOS LISO 325ML", "brand": "VULT CABELOS", "rules": { "presence": true, "price": true }, "channels": ["ALIMENTAR", "FARMA"] },
+    { "ean": "7891033932757", "name": "BASE NIINA SECRETS HD/GLOW COR 05", "brand": "NIINA SECRETS MAKE", "rules": { "presence": true, "price": true }, "channels": ["PERFUMARIA", "DEPTO"] },
+    { "ean": "7891033540037", "name": "BATOM LIQ NIINA SECRETS SKINNY MATTE HIBISCO", "brand": "NIINA SECRETS MAKE", "rules": { "presence": true, "price": true }, "channels": ["PERFUMARIA", "DEPTO"] },
+    { "ean": "7891033519286", "name": "PAMPERS SAB LIQ GLICERINA 200ML", "brand": "PAMPERS", "rules": { "presence": true, "price": true }, "channels": ["FARMA", "ALIMENTAR"] }
   ]
 }
 """;
