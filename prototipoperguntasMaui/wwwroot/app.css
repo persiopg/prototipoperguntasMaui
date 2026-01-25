@@ -85,7 +85,7 @@ h1:focus {
 }
 
 .safe-top {
-    padding-top: max(env(safe-area-inset-top), 56px);
+    padding-top: 0;
 }
 
 .safe-bottom {
@@ -106,4 +106,32 @@ h1:focus {
     .flex-column, .navbar-brand {
         padding-left: env(safe-area-inset-left);
     }
+}
+
+/* Fullscreen map helpers */
+html, body, #app {
+    height: 100%;
+}
+
+.mobile-container.map-fullscreen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.mobile-container.map-fullscreen .map-header {
+    flex: 0 0 auto;
+    z-index: 999;
+}
+
+#map.map-canvas {
+    flex: 1 1 auto;
+    min-height: 0; /* allow flex children to shrink properly */
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    overflow: hidden;
 }

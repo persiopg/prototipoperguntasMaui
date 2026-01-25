@@ -3,8 +3,15 @@ window.mapInterop = {
   markersLayer: null,
   userMarker: null,
   userWatchId: null,
+  // DotNet reference provided by Blazor so JS can callback
+  dotNetRef: null,
+  // optional user info to display in user popup
+  userInfo: null,
 
-  init(center, markers, zoom, includeUser) {
+  init(center, markers, zoom, includeUser, dotNetRef, userInfo) {
+    this.dotNetRef = dotNetRef || null;
+    this.userInfo = userInfo || null;
+
     if (!this.map) {
       this.map = L.map('map').setView(center, zoom || 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -18,7 +25,31 @@ window.mapInterop = {
 
     if (markers && markers.length) {
       markers.forEach(m => {
-        L.marker([m.lat, m.lng]).addTo(this.markersLayer).bindPopup(m.label || '');
+        // Create a popup with two actions: abrir questionário e abrir no Maps
+        const popupHtml = `<div style="min-width:160px"><strong>${m.label}</strong><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button class="leaflet-popup-button btn-q" data-id="${m.id}" style="padding:6px 8px;font-size:12px">Abrir questionário</button><button class="leaflet-popup-button btn-maps" data-lat="${m.lat}" data-lng="${m.lng}" data-label="${m.label}" style="padding:6px 8px;font-size:12px">Abrir no Maps</button></div></div>`;
+        const marker = L.marker([m.lat, m.lng]).addTo(this.markersLayer).bindPopup(popupHtml);
+
+        // Attach click handlers after popup opens
+        marker.on('popupopen', () => {
+          const popupEl = marker.getPopup().getElement();
+          if (!popupEl) return;
+          const btnQ = popupEl.querySelector('.btn-q');
+          if (btnQ) btnQ.addEventListener('click', (e) => {
+            e.preventDefault();
+            // call back into .NET to open questionnaire
+            if (this.dotNetRef && this.dotNetRef.invokeMethodAsync) {
+              try { this.dotNetRef.invokeMethodAsync('Pdv_OpenQuestionnaire', m.id); } catch (err) { console.warn('dotNet invoke failed', err); }
+            }
+            marker.closePopup();
+          });
+
+          const btnMaps = popupEl.querySelector('.btn-maps');
+          if (btnMaps) btnMaps.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.openExternalMaps(m.lat, m.lng, m.label);
+            marker.closePopup();
+          });
+        });
       });
     }
 
@@ -57,15 +88,34 @@ window.mapInterop = {
     if (!this.map) return;
     if (!this.markersLayer) this.markersLayer = L.layerGroup().addTo(this.map);
 
+    const popupContent = this.userInfo ? `<div style="min-width:140px"><div style="font-weight:bold">${this.userInfo.uuid}</div><div style="font-size:12px">${this.userInfo.name}</div><div style="font-size:11px;opacity:0.85;margin-top:4px">Lat: ${lat.toFixed(6)} Lng: ${lng.toFixed(6)}</div></div>` : 'Você';
+
     if (!this.userMarker) {
       // Use a styled circle marker so we don't depend on image assets
       this.userMarker = L.circleMarker([lat, lng], { radius: 8, color: '#1976d2', fillColor: '#1976d2', fillOpacity: 0.95 }).addTo(this.markersLayer);
-      this.userMarker.bindPopup('Você');
+      this.userMarker.bindPopup(popupContent);
     } else {
       this.userMarker.setLatLng([lat, lng]);
+      try { this.userMarker.setPopupContent(popupContent); } catch (e) { /* ignore */ }
     }
 
     if (pan) this.map.panTo([lat, lng]);
+  },
+
+  openExternalMaps(lat, lng, label) {
+    try {
+      // geo: scheme for native mapping apps (mobile devices)
+      const geoUrl = `geo:${lat},${lng}?q=${encodeURIComponent(label)}`;
+      window.location.href = geoUrl;
+      // fallback: open Google Maps after a short delay
+      setTimeout(() => {
+        const google = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        window.open(google, '_blank');
+      }, 500);
+    } catch (e) {
+      const google = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      window.open(google, '_blank');
+    }
   },
 
   watchUserPosition(options) {
