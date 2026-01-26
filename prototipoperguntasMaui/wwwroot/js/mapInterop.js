@@ -36,10 +36,24 @@ window.mapInterop = {
           const btnQ = popupEl.querySelector('.btn-q');
           if (btnQ) btnQ.addEventListener('click', (e) => {
             e.preventDefault();
+            // Diagnostic log for clicks and dotNetRef availability
+            try { console.log('mapInterop: btnQ clicked, id=', m.id, 'dotNetRef:', !!this.dotNetRef); } catch (err) { }
+            // Debug only: log click (native dialog will be shown by .NET)
+            try { console.log('Abrir questionário (JS): ' + m.label); } catch (err) { }
+
             // call back into .NET to open questionnaire
             if (this.dotNetRef && this.dotNetRef.invokeMethodAsync) {
-              try { this.dotNetRef.invokeMethodAsync('Pdv_OpenQuestionnaire', m.id); } catch (err) { console.warn('dotNet invoke failed', err); }
+              try {
+                this.dotNetRef.invokeMethodAsync('Pdv_OpenQuestionnaire', m.id).catch(err => console.warn('dotNet invoke failed (async)', err));
+              } catch (err) { console.warn('dotNet invoke failed', err); }
+            } else {
+              // Fallback: navigate to the store route within the app (may work in Blazor routing as fallback)
+              try {
+                console.warn('mapInterop: dotNetRef missing, using fallback navigation to /store/' + m.id);
+                window.location.href = '#/store/' + m.id;
+              } catch (err) { console.warn('fallback nav failed', err); }
             }
+
             marker.closePopup();
           });
 

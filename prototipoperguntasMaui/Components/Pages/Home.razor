@@ -10,22 +10,29 @@
 @implements IDisposable
 
 <div class="mobile-container flex flex-col">
-    
+
     <!-- Header Principal -->
-    <header class="bg-slate-900 text-white px-5 py-4 sticky top-0 z-50 shadow-xl rounded-b-3xl mx-[-1px] safe-top pt-[40px]">
+    <header
+        class="bg-slate-900 text-white px-5 py-4 sticky top-0 z-50 shadow-xl rounded-b-3xl mx-[-1px] safe-top pt-[40px]">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="font-black text-xl tracking-tight flex items-center gap-2">
                     <img src="image/logo-GB.svg" alt="Logo GB" class="h-6 object-contain" />
-                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@(AppState.Meta?.Device?.AppVersion ?? "--")</span>
+                    <span
+                        class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono text-white/70">@(AppState.Meta?.Device?.AppVersion
+                                                ?? "--")</span>
                 </h1>
-                <p class="text-xs text-slate-400 font-medium mt-2" id="user-info">Rep: @(AppState.Meta?.User?.Uuid?.Replace("colab_rep_", "") ?? "--") | @(AppState.Meta?.Cycle?.Id ?? "--")</p>
+                <p class="text-xs text-slate-400 font-medium mt-2" id="user-info">Rep:
+                    @(AppState.Meta?.User?.Uuid?.Replace("colab_rep_", "") ?? "--") | @(AppState.Meta?.Cycle?.Id ??
+                    "--")</p>
             </div>
             <div class="flex items-center gap-2">
-                <div id="gps-status" class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
+                <div id="gps-status"
+                    class="text-[9px] font-bold flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20 backdrop-blur-md">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div> GPS ON
                 </div>
-                <button @onclick="OpenMap" class="text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition">
+                <button @onclick="OpenMap"
+                    class="text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition">
                     <i class="fa-solid fa-map-location-dot"></i> Mapa
                 </button>
             </div>
@@ -37,7 +44,7 @@
             <h2 class="text-2xl font-black text-slate-800 tracking-tight">Roteiro de Hoje</h2>
             <div class="flex items-center gap-2 mt-1">
                 <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">@DateTime.Now.ToString("dddd, dd 'de' MMMM", new System.Globalization.CultureInfo("pt-BR"))</p>
+                <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">@DateTime.Now.ToString("dddd, dd                    'de' MMMM", new System.Globalization.CultureInfo("pt-BR"))</p>
             </div>
         </div>
 
@@ -46,18 +53,21 @@
             var isSynced = store.Status == "SYNCED";
             var isDone = store.Status == "REALIZADO" || isSynced;
             var isInProgress = store.Status == "EM_ANDAMENTO";
-            var statusClass = isDone 
-                ? (isSynced ? "border-l-8 border-l-emerald-500 bg-slate-100 opacity-60 grayscale-[0.5]" : "border-l-8 border-l-green-500 bg-slate-100 opacity-60 grayscale-[0.5]")
-                : isInProgress
-                    ? "border-l-8 border-l-amber-500 bg-white hover:-translate-y-1 hover:shadow-2xl"
-                    : "border-l-8 border-l-blue-600 bg-white hover:-translate-y-1 hover:shadow-2xl";
-            var iconBg = isDone ? (isSynced ? "bg-emerald-100 text-emerald-600" : "bg-green-100 text-green-600") : isInProgress ? "bg-amber-500 text-white" : "bg-blue-600 text-white";
+            var statusClass = isDone
+            ? (isSynced ? "border-l-8 border-l-emerald-500 bg-slate-100 opacity-60 grayscale-[0.5]" : "border-l-8        border-l-green-500 bg-slate-100 opacity-60 grayscale-[0.5]")
+            : isInProgress
+            ? "border-l-8 border-l-amber-500 bg-white hover:-translate-y-1 hover:shadow-2xl"
+            : "border-l-8 border-l-blue-600 bg-white hover:-translate-y-1 hover:shadow-2xl";
+            var iconBg = isDone ? (isSynced ? "bg-emerald-100 text-emerald-600" : "bg-green-100 text-green-600") :
+            isInProgress ? "bg-amber-500 text-white" : "bg-blue-600 text-white";
             var icon = store.Channel == "FARMA" ? "fa-prescription-bottle-medical" : "fa-cart-shopping";
 
-            <div @onclick="async () => await StartStore(store)" class="app-card @statusClass cursor-pointer group !p-0 fade-in">
+            <div @onclick="async () => await StartStore(store)"
+                class="app-card @statusClass cursor-pointer group !p-0 fade-in pb-5">
                 <div class="p-6">
                     <div class="flex items-start gap-4">
-                        <div class="@iconBg w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
+                        <div
+                            class="@iconBg w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
                             <i class="fa-solid @icon"></i>
                         </div>
                         <div class="flex-1">
@@ -65,37 +75,53 @@
                                 <h3 class="font-black text-slate-800 text-lg leading-tight mb-2">@store.Name</h3>
                                 @if (isDone)
                                 {
-                                    <i class="fa-solid fa-circle-check @(isSynced ? "text-emerald-500" : "text-green-500") text-xl"></i>
+                                    <i
+                                        class="fa-solid fa-circle-check @(isSynced ? "text-emerald-500" : "text-green-500") text-xl"></i>
                                 }
                                 else if (isInProgress)
                                 {
-                                    <span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide">EM ANDAMENTO</span>
+                                    <span
+                                        class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide">EM
+                                        ANDAMENTO</span>
                                 }
                             </div>
 
                             @if (isSynced)
                             {
                                 <div class="mt-1">
-                                    <span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100 tracking-wide">SYNCED</span>
+                                    <span
+                                        class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100 tracking-wide">SYNCED</span>
                                 </div>
                             }
-                            
+
                             <div class="flex flex-wrap gap-2 mb-3">
-                                 <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md border border-slate-200 tracking-wide">@store.Channel</span>
-                                 <span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide"><i class="fa-solid fa-gem text-[8px] mr-1"></i>@store.Cluster</span>
+                                <span
+                                    class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md border border-slate-200 tracking-wide">@store.Channel</span>
+                                <span
+                                    class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide"><i
+                                        class="fa-solid fa-gem text-[8px] mr-1"></i>@store.Cluster</span>
                             </div>
                             <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5 truncate">
                                 <i class="fa-solid fa-location-dot"></i> @store.Address.Split(',')[0]...
                             </p>
                         </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <button @onclick="async () => await OpenRoute(store)" class="text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition">
+                                <i class="fa-solid fa-route"></i> Ver rota
+                            </button>
+                        </div> 
                     </div>
                 </div>
-                
+
                 @if (!isDone)
                 {
-                    <div class="@(isInProgress ? "bg-amber-50/50 border-amber-100 group-hover:bg-amber-50" : "bg-blue-50/50 border-blue-100 group-hover:bg-blue-50") px-6 py-3 border-t flex justify-between items-center transition-colors">
-                        <span class="text-xs font-bold @(isInProgress ? "text-amber-600" : "text-blue-600") uppercase tracking-wider">@(isInProgress ? "Retomar Visita" : "Iniciar Visita")</span>
-                        <i class="fa-solid fa-arrow-right @(isInProgress ? "text-amber-600" : "text-blue-600") group-hover:translate-x-1 transition-transform"></i>
+                    <div
+                        class="@(isInProgress ? "bg-amber-50/50 border-amber-100 group-hover:bg-amber-50" : "bg-blue-50/50 border-blue-100 group-hover:bg-blue-50") px-6 py-3 border-t flex justify-between items-center transition-colors mb-5">
+                        <span
+                            class="text-xs font-bold @(isInProgress ? "text-amber-600" : "text-blue-600") uppercase tracking-wider">@(isInProgress
+                                                ? "Retomar Visita" : "Iniciar Visita")</span>
+                        <i
+                            class="fa-solid fa-arrow-right @(isInProgress ? "text-amber-600" : "text-blue-600") group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 }
             </div>
@@ -104,7 +130,8 @@
         @if (AppState.Stores.All(s => s.Status == "REALIZADO" || s.Status == "SYNCED") && AppState.Stores.Count > 0)
         {
             <div class="mt-8 fade-in px-1">
-                <button @onclick="GenerateFinalJson" class="w-full bg-slate-800 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.02] transition duration-300 flex items-center justify-center gap-3">
+                <button @onclick="GenerateFinalJson"
+                    class="w-full bg-slate-800 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.02] transition duration-300 flex items-center justify-center gap-3">
                     <i class="fa-solid fa-cloud-arrow-up text-xl animate-bounce"></i> SINCRONIZAR DIA
                 </button>
             </div>
@@ -115,12 +142,14 @@
     @if (ShowJsonModal)
     {
         <div class="fixed inset-0 bg-slate-900/90 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div class="bg-white rounded-2xl w-full max-w-lg h-3/4 flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+            <div
+                class="bg-white rounded-2xl w-full max-w-lg h-3/4 flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-out]">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-code text-blue-600"></i> Payload JSON
                     </h3>
-                    <button @onclick="CloseJsonModal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition">
+                    <button @onclick="CloseJsonModal"
+                        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -128,7 +157,8 @@
                     <pre>@JsonOutput</pre>
                 </div>
                 <div class="p-4 border-t bg-white">
-                    <button @onclick="CopyJson" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-blue-700 transition active:scale-95 flex items-center justify-center gap-2">
+                    <button @onclick="CopyJson"
+                        class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-blue-700 transition active:scale-95 flex items-center justify-center gap-2">
                         <i class="fa-regular fa-copy"></i> Copiar JSON
                     </button>
                 </div>
@@ -140,16 +170,19 @@
     @if (ShowDialog)
     {
         <div class="fixed inset-0 bg-slate-900/80 z-[80] flex items-center justify-center p-6 backdrop-blur-md">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 animate-[fadeIn_0.2s_ease-out]">
+            <div
+                class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 animate-[fadeIn_0.2s_ease-out]">
                 <div class="p-8 text-center">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 mb-6 shadow-inner">
+                    <div
+                        class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 mb-6 shadow-inner">
                         <i class="fa-solid fa-circle-info text-blue-600 text-3xl"></i>
                     </div>
                     <h3 class="text-xl font-black text-slate-900 mb-2">Atenção</h3>
                     <p class="text-sm text-slate-500 leading-relaxed">@DialogMessage</p>
                 </div>
                 <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-center border-t border-slate-100">
-                    <button type="button" @onclick="CloseDialog" class="flex-1 justify-center rounded-xl border border-transparent px-4 py-3 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none shadow-lg shadow-blue-200 transition">
+                    <button type="button" @onclick="CloseDialog"
+                        class="flex-1 justify-center rounded-xl border border-transparent px-4 py-3 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none shadow-lg shadow-blue-200 transition">
                         OK
                     </button>
                 </div>
@@ -243,8 +276,8 @@
         {
             foreach (var t in raw.scoring_rules.targets_by_channel)
             {
-                outputScoreRules.Add(new 
-                { 
+                outputScoreRules.Add(new
+                {
                     Pilar = t.pillar,
                     Sub_Pilar = t.obs, // Mapping obs to Sub_Pilar based on user example
                     Target = t.target
@@ -255,7 +288,7 @@
         var payload = new
         {
             app_metadata = raw.app_metadata,
-            geolocation = new 
+            geolocation = new
             {
                 lat = -23.550520, // Mocked as per example/context
                 lng = -46.633308,
@@ -266,7 +299,7 @@
             products_catalog = raw.products_catalog,
             campaigns_catalog = raw.campaigns_catalog,
             stores_mock = raw.stores_mock,
-            
+
             // Logically should include the collected data
             daily_execution_payload = new
             {
@@ -297,6 +330,19 @@
     }
 
     private void CloseDialog() => ShowDialog = false;
+
+    private async Task OpenRoute(Store store)
+    {
+        try
+        {
+            var lat = store.Lat;
+            var lng = store.Lng;
+            var url = $"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}&travelmode=driving";
+            await Launcher.OpenAsync(new Uri(url));
+        }
+        catch (Exception ex)
+        {
+            ShowDialogMessage($"Não foi possível abrir o Maps. {ex.GetType().Name}: {ex.Message}");
+        }
+    }
 }
-
-
