@@ -99,7 +99,7 @@
         if (status != PermissionStatus.Granted)
         {
             // Open app settings to let user enable permission
-            try { await MainThread.InvokeOnMainThreadAsync(async () => await Shell.Current.DisplayAlert("Permissão", "Permissão de localização negada. Por favor ative nas configurações do aplicativo.", "OK")); } catch { }
+            try { await MainThread.InvokeOnMainThreadAsync(async () => await Shell.Current.DisplayAlertAsync("Permissão", "Permissão de localização negada. Por favor ative nas configurações do aplicativo.", "OK")); } catch { }
             try { AppInfo.ShowSettingsUI(); } catch { }
             return;
         }
@@ -209,13 +209,13 @@
         var store = AppState.Stores.FirstOrDefault(s => s.Id == storeId);
         if (store == null)
         {
-            await Shell.Current.DisplayAlert("Atenção", "Loja não encontrada!", "OK");
+            await Shell.Current.DisplayAlertAsync("Atenção", "Loja não encontrada!", "OK");
             return;
         }
 
         if (store.Status == "REALIZADO" || store.Status == "SYNCED")
         {
-            await Shell.Current.DisplayAlert("Atenção", "Esta visita já foi realizada.", "OK");
+            await Shell.Current.DisplayAlertAsync("Atenção", "Esta visita já foi realizada.", "OK");
             return;
         }
 
@@ -233,13 +233,13 @@
             var permission = await Permissions.RequestAsync<Permissions.Camera>();
             if (permission != PermissionStatus.Granted)
             {
-                await Shell.Current.DisplayAlert("Permissão", "Permissão de câmera negada.", "OK");
+                await Shell.Current.DisplayAlertAsync("Permissão", "Permissão de câmera negada.", "OK");
                 return;
             }
 
             if (!MediaPicker.Default.IsCaptureSupported)
             {
-                await Shell.Current.DisplayAlert("Erro", "Captura de câmera não suportada neste dispositivo.", "OK");
+                await Shell.Current.DisplayAlertAsync("Erro", "Captura de câmera não suportada neste dispositivo.", "OK");
                 return;
             }
 
@@ -250,7 +250,7 @@
 
             if (photo == null)
             {
-                await Shell.Current.DisplayAlert("Atenção", "É necessário tirar uma foto para iniciar a visita.", "OK");
+                await Shell.Current.DisplayAlertAsync("Atenção", "É necessário tirar uma foto para iniciar a visita.", "OK");
                 return;
             }
 
@@ -267,7 +267,7 @@
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Erro", $"Erro ao abrir câmera: {ex.Message}", "OK");
+            await Shell.Current.DisplayAlertAsync("Erro", $"Erro ao abrir câmera: {ex.Message}", "OK");
         }
     }
 }

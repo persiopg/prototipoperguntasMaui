@@ -73,17 +73,18 @@
                         <div class="flex-1">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-black text-slate-800 text-lg leading-tight mb-2">@store.Name</h3>
-                                @if (isDone)
-                                {
-                                    <i
-                                        class="fa-solid fa-circle-check @(isSynced ? "text-emerald-500" : "text-green-500") text-xl"></i>
-                                }
-                                else if (isInProgress)
-                                {
-                                    <span
-                                        class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide">EM
-                                        ANDAMENTO</span>
-                                }
+                                <div class="flex items-start gap-3">
+                                    @if (isDone)
+                                    {
+                                        <i class="fa-solid fa-circle-check @(isSynced ? "text-emerald-500" : "text-green-500") text-xl"></i>
+                                    }
+                                    else if (isInProgress)
+                                    {
+                                        <span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 tracking-wide">EM ANDAMENTO</span>
+                                    }
+
+                                  
+                                </div>
                             </div>
 
                             @if (isSynced)
@@ -104,9 +105,7 @@
                             <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5 truncate">
                                 <i class="fa-solid fa-location-dot"></i> @store.Address.Split(',')[0]...
                             </p>
-                        </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <button @onclick="async () => await OpenRoute(store)" class="text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition">
+                            <button @onclick:stopPropagation="true" @onclick="async () => await OpenRoute(store)" class="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-md border border-blue-100 hover:bg-blue-100 transition">
                                 <i class="fa-solid fa-route"></i> Ver rota
                             </button>
                         </div> 
@@ -333,16 +332,32 @@
 
     private async Task OpenRoute(Store store)
     {
+        if (store == null)
+        {
+            ShowDialogMessage("Loja inválida");
+            return;
+        }
+
+        // If Lat/Lng are zero we'll consider coordinates unavailable
+        if (store.Lat == 0 && store.Lng == 0)
+        {
+            ShowDialogMessage("Coordenadas da loja indisponíveis.");
+            return;
+        }
+
+        var lat = store.Lat;
+        var lng = store.Lng;
+        var label = string.IsNullOrWhiteSpace(store.Name) ? store.Address : store.Name;
+
         try
         {
-            var lat = store.Lat;
-            var lng = store.Lng;
-            var url = $"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}&travelmode=driving";
-            await Launcher.OpenAsync(new Uri(url));
+            // Use the same JS helper as the map view so the OS opens its native chooser (geo: URI)
+            await JS.InvokeVoidAsync("mapInterop.openExternalMaps", lat, lng, label);
         }
         catch (Exception ex)
         {
-            ShowDialogMessage($"Não foi possível abrir o Maps. {ex.GetType().Name}: {ex.Message}");
+            ShowDialogMessage($"Não foi possível abrir a rota. {ex.GetType().Name}: {ex.Message}");
         }
+    }
     }
 }
