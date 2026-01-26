@@ -69,20 +69,45 @@
                         
                         @if (q.Options != null && q.Options.Any())
                         {
-                            <div class="grid grid-cols-1 gap-3">
-                                @foreach(var opt in q.Options)
-                                {
-                                    var isSelected = rawAns?.ToString() == opt;
-                                    <button @onclick="() => AnswerPos(q.Id, opt)" class="py-3 px-4 rounded-xl border-2 font-bold text-sm text-left transition-all duration-200 shadow-sm active:scale-95 @(isSelected ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-100" : "bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:text-blue-600")">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center @(isSelected ? "border-white" : "border-slate-300")">
-                                                @if(isSelected) { <div class="w-2.5 h-2.5 rounded-full bg-white"></div> }
-                                            </div>
-                                            @opt
-                                        </div>
+                            var existsSet = AppState.TempExecution.Exists.ContainsKey(q.Id);
+                            var existsVal = existsSet ? AppState.TempExecution.Exists[q.Id] : (bool?)null;
+
+                            @* Step 1: Ask if it exists *@
+                            @if (!existsSet)
+                            {
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button @onclick="() => SetExistence(q.Id, true)" class="py-4 rounded-xl border-2 font-black text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm active:scale-95 bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:text-blue-600">
+                                        <i class="fa-solid fa-check"></i>  SIM
                                     </button>
-                                }
-                            </div>
+                                    <button @onclick="() => SetExistence(q.Id, false)" class="py-4 rounded-xl border-2 font-black text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm active:scale-95 bg-white text-slate-400 border-slate-100 hover:border-red-200 hover:text-red-500">
+                                        <i class="fa-solid fa-xmark"></i>  NÃO
+                                    </button>
+                                </div>
+                            }
+                            else if (existsVal == false)
+                            {
+                                <div class="mt-5 animate-in slide-in-from-top-2 fade-in bg-red-50 p-3 rounded-xl border border-red-100">
+                                    <label class="text-[10px] font-bold text-red-500 uppercase mb-1 block flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Justificativa Obrigatória</label>
+                                    <textarea value="@(AppState.TempExecution.Justifications.ContainsKey(q.Id) ? AppState.TempExecution.Justifications[q.Id] : "")" @oninput="(e) => SaveJustification(q.Id, e.Value.ToString())" rows="2" class="w-full bg-white border border-red-200 rounded-lg p-3 text-sm text-slate-700 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none transition" placeholder="Descreva o motivo..."></textarea>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="grid grid-cols-1 gap-3">
+                                    @foreach(var opt in q.Options)
+                                    {
+                                        var isSelected = rawAns?.ToString() == opt;
+                                        <button @onclick="() => AnswerPos(q.Id, opt)" class="py-3 px-4 rounded-xl border-2 font-bold text-sm text-left transition-all duration-200 shadow-sm active:scale-95 @(isSelected ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-100" : "bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:text-blue-600")">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center @(isSelected ? "border-white" : "border-slate-300")">
+                                                    @if(isSelected) { <div class="w-2.5 h-2.5 rounded-full bg-white"></div> }
+                                                </div>
+                                                @opt
+                                            </div>
+                                        </button>
+                                    }
+                                </div>
+                            }
                         }
                         else
                         {
@@ -355,6 +380,29 @@
             AppState.TempExecution.Answers.Add(id, value);
     }
 
+    private void SetExistence(string id, bool exists)
+    {
+        if (AppState.TempExecution.Exists.ContainsKey(id))
+            AppState.TempExecution.Exists[id] = exists;
+        else
+            AppState.TempExecution.Exists.Add(id, exists);
+
+        if (!exists)
+        {
+            // mark as answered negative so validation and justification apply
+            if (AppState.TempExecution.Answers.ContainsKey(id))
+                AppState.TempExecution.Answers[id] = false;
+            else
+                AppState.TempExecution.Answers.Add(id, false);
+        }
+        else
+        {
+            // require option selection: remove previous boolean marker if any
+            if (AppState.TempExecution.Answers.ContainsKey(id))
+                AppState.TempExecution.Answers.Remove(id);
+        }
+    }
+
     private void SaveJustification(string id, string text)
     {
         if (AppState.TempExecution.Justifications.ContainsKey(id))
@@ -372,6 +420,61 @@
             AppState.TempExecution.Audit.Add(ean, "PRESENT");
     }
 
+    // Update FinishVisit validation to consider existence flow for multi-choice questions
+    private void FinishVisit()
+    {
+        var unanswered = CurrentStore.Data.Positioning.Where(q =>
+            q.Options != null && q.Options.Any()
+                ? !AppState.TempExecution.Exists.ContainsKey(q.Id) || (AppState.TempExecution.Exists[q.Id] && !AppState.TempExecution.Answers.ContainsKey(q.Id))
+                : !AppState.TempExecution.Answers.ContainsKey(q.Id)
+        ).ToList();
+        if (unanswered.Any())
+        {
+            ShowAlert($"Você precisa responder {unanswered.Count} perguntas de posicionamento.");
+            return;
+        }
+
+        var unjustified = CurrentStore.Data.Positioning.Where(q =>
+                (AppState.TempExecution.Answers.ContainsKey(q.Id) && AppState.TempExecution.Answers[q.Id] is bool b && b == false)
+                || (q.Options != null && q.Options.Any() && AppState.TempExecution.Exists.ContainsKey(q.Id) && AppState.TempExecution.Exists[q.Id] == false)
+            )
+            .Where(q => !AppState.TempExecution.Justifications.ContainsKey(q.Id) || string.IsNullOrWhiteSpace(AppState.TempExecution.Justifications[q.Id]))
+            .ToList();
+
+        if (unjustified.Any())
+        {
+            ShowAlert("Há respostas negativas sem justificativa.");
+            return;
+        }
+
+        var missingPresence = CurrentStore.Data.Presence.Where(sku => !AppState.TempExecution.Audit.ContainsKey(sku.Ean)).ToList();
+        if (missingPresence.Any())
+        {
+            ShowAlert($"Você precisa revisar {missingPresence.Count} itens de presença.");
+            return;
+        }
+
+        var missingPrices = CurrentStore.Data.Pricing.Where(sku => !AppState.TempExecution.Prices.ContainsKey(sku.Ean) || AppState.TempExecution.Prices[sku.Ean] <= 0).ToList();
+        if (missingPrices.Any())
+        {
+            ShowAlert($"Você precisa coletar {missingPrices.Count} preços.");
+            return;
+        }
+
+        var missingExtras = CurrentStore.Data.Extras.Where(cam => !AppState.TempExecution.Campaigns.ContainsKey(cam.Id)).ToList();
+        if (missingExtras.Any())
+        {
+            ShowAlert($"Você precisa revisar {missingExtras.Count} campanhas.");
+            return;
+        }
+
+
+        ShowConfirm("Deseja finalizar a visita?", () =>
+        {
+            AppState.FinishVisit();
+            Nav.NavigateTo("/dashboard");
+        });
+    }
     private void CollectPrice(string ean, object value)
     {
         if (decimal.TryParse(value?.ToString(), out decimal val))
@@ -443,55 +546,7 @@
         });
     }
 
-    private void FinishVisit()
-    {
-        var unanswered = CurrentStore.Data.Positioning.Where(q => !AppState.TempExecution.Answers.ContainsKey(q.Id)).ToList();
-        if (unanswered.Any())
-        {
-            ShowAlert($"Você precisa responder {unanswered.Count} perguntas de posicionamento.");
-            return;
-        }
 
-        var unjustified = CurrentStore.Data.Positioning.Where(q => 
-            AppState.TempExecution.Answers.ContainsKey(q.Id) && 
-            AppState.TempExecution.Answers[q.Id] is bool b && b == false && 
-            (!AppState.TempExecution.Justifications.ContainsKey(q.Id) || string.IsNullOrWhiteSpace(AppState.TempExecution.Justifications[q.Id]))
-        ).ToList();
-
-        if (unjustified.Any())
-        {
-            ShowAlert("Há respostas negativas sem justificativa.");
-            return;
-        }
-
-        var missingPresence = CurrentStore.Data.Presence.Where(sku => !AppState.TempExecution.Audit.ContainsKey(sku.Ean)).ToList();
-        if (missingPresence.Any())
-        {
-            ShowAlert($"Você precisa revisar {missingPresence.Count} itens de presença.");
-            return;
-        }
-
-        var missingPrices = CurrentStore.Data.Pricing.Where(sku => !AppState.TempExecution.Prices.ContainsKey(sku.Ean) || AppState.TempExecution.Prices[sku.Ean] <= 0).ToList();
-        if (missingPrices.Any())
-        {
-            ShowAlert($"Você precisa coletar {missingPrices.Count} preços.");
-            return;
-        }
-
-        var missingExtras = CurrentStore.Data.Extras.Where(cam => !AppState.TempExecution.Campaigns.ContainsKey(cam.Id)).ToList();
-        if (missingExtras.Any())
-        {
-            ShowAlert($"Você precisa revisar {missingExtras.Count} campanhas.");
-            return;
-        }
-
-
-        ShowConfirm("Deseja finalizar a visita?", () =>
-        {
-            AppState.FinishVisit();
-            Nav.NavigateTo("/dashboard");
-        });
-    }
 
     private void BackToDashboard()
     {

@@ -446,6 +446,8 @@ namespace prototipoperguntasMaui.Services
         public string CheckinPhotoBase64 { get; set; }
         public Dictionary<string, string> EvidencePhotos { get; set; } = new();
         public Dictionary<string, object> Answers { get; set; } = new(); 
+        // Tracks existence for multiple-choice questions: user must first indicate if the item exists
+        public Dictionary<string, bool> Exists { get; set; } = new(); 
         public Dictionary<string, string> Justifications { get; set; } = new(); 
         public Dictionary<string, string> Audit { get; set; } = new(); 
         public Dictionary<string, decimal> Prices { get; set; } = new(); 
