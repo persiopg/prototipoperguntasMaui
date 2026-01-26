@@ -26,6 +26,11 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <!-- Location usage descriptions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Precisamos da sua localização para mostrar sua posição no mapa.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Permitir acesso à localização melhora a experiência de navegação no mapa.</string>
     <key>XSAppIconAssets</key>
     <string>Assets.xcassets/appicon.appiconset</string>
 </dict>

@@ -1,0 +1,185 @@
+@page "/map"
+@using prototipoperguntasMaui.Services
+@using Microsoft.Maui.ApplicationModel
+@using Microsoft.Maui.Devices.Sensors
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject AppStateService AppState
+
+<div class="mobile-container map-fullscreen">
+    <header class="bg-slate-900 text-white px-5 py-4 sticky top-0 z-50 shadow-xl rounded-b-3xl mx-[-1px] safe-top pt-[40px] map-header">
+        <div class="flex justify-between items-center">
+            <button class="bg-white/10 text-white px-3 py-1.5 rounded-md" @onclick="BackToDashboard">
+                <i class="fa-solid fa-left-long"></i> Voltar
+            </button>
+        <div class="flex justify-between items-center pt-3">
+            <!-- Status indicator: localização é iniciada automaticamente -->
+            <div class="flex items-center justify-end gap-3">
+                @if (IsWatching)
+                {
+                    <div class="text-[9px] font-bold flex items-center gap-2 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/20">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                        Localizando
+                    </div>
+                }
+                else
+                {
+                    <button class="ml-2 text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-md border border-white/10 hover:bg-white/20 transition" @onclick="StartLocateAsync">
+                        Tentar localizar
+                    </button>
+
+                    <div class="text-[9px] font-bold flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1.5 rounded-full border border-red-500/20">
+                        <div class="w-1.5 h-1.5 rounded-full bg-red-400"></div>
+                        Localização parada
+                    </div>
+                    
+                }
+            </div>
+        </div>
+        </div>
+    </header>
+
+    <div id="map" class="map-canvas"></div>
+</div> 
+
+@code {
+    private bool _init;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_init) return;
+        _init = true;
+
+        // include store id + label so popups can reference the store
+        var pdvs = AppState.Stores.Select(s => new { id = s.Id, lat = s.Lat, lng = s.Lng, label = s.Name }).ToArray();
+        var user = await JS.InvokeAsync<object>("mapInterop.getUserPosition");
+
+        double[] center;
+        if (user != null)
+        {
+            var d = (dynamic)user;
+            center = new double[] { Convert.ToDouble(d.lat), Convert.ToDouble(d.lng) };
+        }
+        else if (pdvs.Length > 0) center = new[] { pdvs[0].lat, pdvs[0].lng };
+        else center = new[] { -23.550520, -46.633308 };
+
+        // Create .NET reference so JS can call back into this component
+        _dotRef = DotNetObjectReference.Create(this);
+        var userInfo = AppState.Meta?.User != null ? new { uuid = AppState.Meta.User.Uuid, name = AppState.Meta.User.Name } : null;
+        await JS.InvokeVoidAsync("mapInterop.init", center, pdvs, 13, user != null, _dotRef, userInfo);
+
+        // Start locating automatically after map is initialized
+        await StartLocateAsync();
+
+    }
+
+    // Hold a reference so we can dispose it when component is disposed
+    private DotNetObjectReference<Map>? _dotRef;
+
+    private async Task BackToDashboard() => await Microsoft.Maui.Controls.Shell.Current.GoToAsync("..", true);
+
+    private bool IsWatching = false;
+    private CancellationTokenSource? _cts;
+
+    // Start locating (extracted so we can auto-start on render)
+    private async Task StartLocateAsync()
+    {
+        if (IsWatching) return;
+
+        // Check and request location permission
+        var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+        if (status != PermissionStatus.Granted)
+        {
+            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+        }
+
+        if (status != PermissionStatus.Granted)
+        {
+            // Open app settings to let user enable permission
+            await JS.InvokeVoidAsync("alert", "Permissão de localização negada. Por favor ative nas configurações do aplicativo.");
+            try { AppInfo.ShowSettingsUI(); } catch { }
+            return;
+        }
+
+        // Start a background poller to update location periodically using MAUI Geolocation
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var req = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(5));
+                        var location = await Geolocation.Default.GetLocationAsync(req, token);
+                        if (location != null)
+                        {
+                            await JS.InvokeVoidAsync("mapInterop.setUserMarker", location.Latitude, location.Longitude, false);
+                        }
+                    }
+                    catch (OperationCanceledException) { break; }
+                    catch { /* ignore transient GPS errors */ }
+
+                    await Task.Delay(3000, token);
+                }
+            }
+            catch (TaskCanceledException) { }
+        }, token);
+
+        // Also attempt an immediate one-off location to center map
+        try
+        {
+            var quick = await Geolocation.Default.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10)));
+            if (quick != null)
+            {
+                await JS.InvokeVoidAsync("mapInterop.setUserMarker", quick.Latitude, quick.Longitude, true);
+                await JS.InvokeVoidAsync("mapInterop.centerOnUser");
+            }
+        }
+        catch { }
+
+        // Keep JS watch as fallback (in case in-browser geolocation is available)
+        await JS.InvokeVoidAsync("mapInterop.watchUserPosition");
+        IsWatching = true;
+        StateHasChanged();
+    }
+
+    private async Task StopLocateAsync()
+    {
+        if (!IsWatching) return;
+        try { _cts?.Cancel(); } catch { }
+        _cts?.Dispose();
+        _cts = null;
+
+        await JS.InvokeVoidAsync("mapInterop.stopWatchUserPosition");
+        IsWatching = false;
+        StateHasChanged();
+    }
+
+    private async Task ToggleLocate()
+    {
+        if (IsWatching) await StopLocateAsync(); else await StartLocateAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { _cts?.Cancel(); } catch { }
+        _cts?.Dispose();
+        _cts = null;
+        await JS.InvokeVoidAsync("mapInterop.stopWatchUserPosition");
+
+        // Dispose managed DotNet reference
+        try { _dotRef?.Dispose(); } catch { }
+        _dotRef = null;
+    }
+
+    // Called from JS when a PDV popup 'Abrir questionário' is clicked
+    [JSInvokable]
+    public async Task Pdv_OpenQuestionnaire(int storeId)
+    {
+        // Navigate to the store execution page using native Shell (keeps lifecycle consistent)
+        await Microsoft.Maui.Controls.Shell.Current.GoToAsync($"/store/{storeId}");
+    }
+}

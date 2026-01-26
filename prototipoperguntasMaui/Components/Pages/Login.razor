@@ -10,9 +10,9 @@
         <!-- Logo / Header -->
         <div class="text-center mb-10">
              <div class="w-20 h-20 bg-slate-900 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-blue-200 mb-4 transform rotate-3">
-                 <i class="fa-solid fa-layer-group text-3xl text-white"></i>
+                 <img src="image/logo-GB.svg" alt="Logo GB" class="w-14 h-14 object-contain" />
              </div>
-             <h1 class="font-black text-2xl text-slate-800 tracking-tight">Trade Force</h1>
+             <h1 class="font-black text-2xl text-slate-800 tracking-tight"><span class="sr-only">Trade Force</span></h1>
              <p class="text-slate-400 text-sm font-medium mt-1">Faça login para continuar</p>
         </div>
 
@@ -87,6 +87,9 @@
     
     private void SwitchToMainApp()
     {
-        Nav.NavigateTo("/dashboard");
+        if (Application.Current != null)
+        {
+            Application.Current.MainPage = new AppShell();
+        }
     }
 }

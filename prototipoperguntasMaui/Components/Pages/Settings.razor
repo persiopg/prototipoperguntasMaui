@@ -38,11 +38,14 @@
                 </div>
             </div>
         </div>
+        <div>
+            <button @onclick="Logout" class="w-full bg-red-50 text-red-500 font-bold py-4 rounded-xl border border-red-100 flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-power-off"></i> SAIR DA CONTA
+            </button>
+        </div>
     </div>
-
-    <button @onclick="Logout" class="w-full bg-red-50 text-red-500 font-bold py-4 rounded-xl border border-red-100 flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-colors">
-        <i class="fa-solid fa-power-off"></i> SAIR DA CONTA
-    </button>
+    
+   
 </div>
 
 @code {
