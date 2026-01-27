@@ -169,3 +169,48 @@ window.mapInterop = {
     }, 100);
   }
 };
+
+// Simple signature helper: initializes a canvas for pointer drawing, returns dataURL and can clear the canvas.
+window.signature = {
+  _canvases: {},
+  init: function (canvasId) {
+    try {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      ctx.scale(ratio, ratio);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      let drawing = false;
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+      canvas.addEventListener('pointerdown', function (e) { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+      canvas.addEventListener('pointermove', function (e) { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+      canvas.addEventListener('pointerup', function (e) { drawing = false; });
+      canvas.addEventListener('pointercancel', function () { drawing = false; });
+      this._canvases[canvasId] = { canvas: canvas, ctx: ctx, ratio: ratio };
+    } catch (e) { console.warn('signature.init error', e); }
+  },
+  getDataUrl: function (canvasId) {
+    try {
+      const c = document.getElementById(canvasId);
+      if (!c) return null;
+      return c.toDataURL('image/png');
+    } catch (e) { console.warn('signature.getDataUrl error', e); return null; }
+  },
+  clear: function (canvasId) {
+    try {
+      const entry = this._canvases[canvasId];
+      if (entry) { const c = entry.canvas; const ctx = entry.ctx; ctx.clearRect(0, 0, c.width, c.height); }
+      else { const c = document.getElementById(canvasId); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); }
+    } catch (e) { console.warn('signature.clear error', e); }
+  }
+};

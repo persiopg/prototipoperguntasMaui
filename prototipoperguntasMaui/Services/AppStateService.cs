@@ -325,7 +325,8 @@ namespace prototipoperguntasMaui.Services
                 {
                     module_positioning = new { answers_rich_data = posData },
                     module_presence = new { audit_rich_data = auditData },
-                    module_pricing = new { price_check_rich_data = priceData }
+                    module_pricing = new { price_check_rich_data = priceData },
+                    module_validation = new { general_notes = TempExecution.GeneralNotes, signature = TempExecution.SignatureBase64 }
                 }
             };
 
@@ -453,6 +454,13 @@ namespace prototipoperguntasMaui.Services
         public Dictionary<string, decimal> Prices { get; set; } = new(); 
         public Dictionary<string, bool> Campaigns { get; set; } = new(); 
         public Coords CheckinCoords { get; set; } 
+
+        // New: digital signature (data URL) and general observations collected at checkout
+        public string SignatureBase64 { get; set; }
+        public string GeneralNotes { get; set; }
+        
+        // New: selected activity type at check-in (e.g., RESEARCH, REPLENISHMENT, RELATIONSHIP, NEGOTIATION)
+        public string ActivityType { get; set; }
     }
     public class Coords { public double Lat { get; set; } public double Lng { get; set; } }
     public class VisitLog 

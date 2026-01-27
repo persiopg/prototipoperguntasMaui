@@ -33,22 +33,61 @@
             </div>
 
             <div class="app-card">
-                <h3 class="font-black text-slate-800 text-lg mb-2">Foto da Fachada</h3>
-                <p class="text-xs text-slate-500 mb-4">Tire ou selecione uma foto antes de iniciar a visita.</p>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 block">Selecione a Atividade</label>
+                <div class="space-y-3 mb-4">
+                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-slate-100 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all">
+                        <input type="radio" name="activity" value="RESEARCH" @onchange='() => SelectedActivity = "RESEARCH"' class="w-5 h-5 text-blue-600 focus:ring-blue-500" checked="checked">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Pesquisa de Ciclo</span>
+                            <span class="block text-xs text-slate-500">Auditoria completa de itens</span>
+                        </div>
+                        <i class="fa-solid fa-clipboard-check text-blue-500 ml-auto text-lg"></i>
+                    </label>
 
-                <InputFile @ref="FileInput" OnChange="OnFileChange" accept="image/*" capture="environment" class="w-full" />
+                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-slate-100 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                        <input type="radio" name="activity" value="REPLENISHMENT" @onchange='() => SelectedActivity = "REPLENISHMENT"' class="w-5 h-5 text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Reposição</span>
+                            <span class="block text-xs text-slate-500">Abastecimento e organização</span>
+                        </div>
+                        <i class="fa-solid fa-boxes-packing text-emerald-500 ml-auto text-lg"></i>
+                    </label>
+
+                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-slate-100 cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-all">
+                        <input type="radio" name="activity" value="RELATIONSHIP" @onchange='() => SelectedActivity = "RELATIONSHIP"' class="w-5 h-5 text-purple-600 focus:ring-purple-500">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Relacionamento</span>
+                            <span class="block text-xs text-slate-500">Visita de cortesia / Gestão</span>
+                        </div>
+                        <i class="fa-solid fa-handshake text-purple-500 ml-auto text-lg"></i>
+                    </label>
+
+                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-slate-100 cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-all">
+                        <input type="radio" name="activity" value="NEGOTIATION" @onchange='() => SelectedActivity = "NEGOTIATION"' class="w-5 h-5 text-orange-600 focus:ring-orange-500">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Negociação</span>
+                            <span class="block text-xs text-slate-500">Acordos comerciais / Sell-in</span>
+                        </div>
+                        <i class="fa-solid fa-file-signature text-orange-500 ml-auto text-lg"></i>
+                    </label>
+                </div>
+
+                <h3 class="font-black text-slate-800 text-lg mb-2">Foto da Fachada</h3>
+                <p class="text-xs text-slate-500 mb-4">Ao iniciar a visita, o aplicativo vai abrir a câmera para tirar a foto da fachada (seleção de arquivos não é permitida).</p>
 
                 @if (!string.IsNullOrWhiteSpace(PhotoPreviewDataUrl))
                 {
                     <div class="mt-5">
                         <img src="@PhotoPreviewDataUrl" class="w-full rounded-2xl border border-slate-100 shadow-sm" />
                     </div>
+                } else {
+                    <div class="mt-2 text-[11px] text-slate-400">Nenhuma foto registrada ainda. Clique em <strong>INICIAR VISITA</strong> para abrir a câmera.</div>
                 }
             </div>
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl p-5 border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-[480px] md:mx-auto z-50 rounded-t-3xl">
-            <button @onclick="ConfirmCheckin" disabled="@(!CanProceed)" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.01] transition-all flex justify-between items-center px-8 group disabled:opacity-50 disabled:cursor-not-allowed">
+            <button @onclick="ConfirmCheckin" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-300 hover:bg-black hover:scale-[1.01] transition-all flex justify-between items-center px-8 group">
                 <span class="group-hover:translate-x-1 transition-transform">INICIAR VISITA</span>
                 <div class="bg-slate-800 rounded-xl w-8 h-8 flex items-center justify-center group-hover:bg-slate-700 transition-colors border border-slate-700">
                     <i class="fa-solid fa-camera text-sm text-blue-300"></i>
@@ -69,9 +108,11 @@
     [Parameter] public int StoreId { get; set; }
     private Store? CurrentStore;
     private string? PhotoPreviewDataUrl;
-    private bool CanProceed => !string.IsNullOrWhiteSpace(PhotoPreviewDataUrl);
-    private InputFile? FileInput;
+    private string SelectedActivity { get; set; } = "RESEARCH";
+    private bool CanProceed => !string.IsNullOrWhiteSpace(SelectedActivity);
     private bool AutoOpened;
+
+    [Inject] private IServiceProvider ServiceProvider { get; set; } // to access MainThread/MediaPicker via DI if needed (kept for parity)
 
     protected override void OnInitialized()
     {
@@ -91,34 +132,60 @@
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    // Removed auto camera open: user chooses activity then takes/selects a photo manually
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !AutoOpened)
+        return Task.CompletedTask;
+    }
+
+    private async Task CapturePhotoAndComplete()
+    {
+        try
         {
-            AutoOpened = true;
-            await JS.InvokeVoidAsync("checkin.openCamera");
+            var permission = await Permissions.RequestAsync<Permissions.Camera>();
+            if (permission != PermissionStatus.Granted)
+            {
+                await Shell.Current.DisplayAlertAsync("Permissão", "Permissão de câmera negada.", "OK");
+                return;
+            }
+
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                await Shell.Current.DisplayAlertAsync("Erro", "Captura de câmera não suportada neste dispositivo.", "OK");
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions { Title = "Foto da Fachada" });
+            if (photo == null)
+            {
+                await Shell.Current.DisplayAlertAsync("Atenção", "Foto não capturada.", "OK");
+                return;
+            }
+
+            using var stream = await photo.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            PhotoPreviewDataUrl = $"data:{photo.ContentType};base64,{base64}";
+
+            // set activity and complete checkin
+            AppState.TempExecution.ActivityType = SelectedActivity;
+            AppState.CompleteCheckin(StoreId, PhotoPreviewDataUrl);
+            Nav.NavigateTo($"/store/{StoreId}");
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível abrir a câmera: {ex.Message}", "OK");
         }
     }
 
-    private async Task OnFileChange(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-        if (file == null) return;
-
-        using var stream = file.OpenReadStream(5 * 1024 * 1024);
-        using var ms = new MemoryStream();
-        await stream.CopyToAsync(ms);
-        var base64 = Convert.ToBase64String(ms.ToArray());
-        PhotoPreviewDataUrl = $"data:{file.ContentType};base64,{base64}";
-
-        AppState.CompleteCheckin(StoreId, PhotoPreviewDataUrl);
-        Nav.NavigateTo($"/store/{StoreId}");
-    }
-
-    private void ConfirmCheckin()
+    private async Task ConfirmCheckin()
     {
         if (CurrentStore == null || !CanProceed) return;
+        await CapturePhotoAndComplete();
 
+        // Save selected activity and complete check-in
+        AppState.TempExecution.ActivityType = SelectedActivity;
         AppState.CompleteCheckin(StoreId, PhotoPreviewDataUrl!);
         Nav.NavigateTo($"/store/{StoreId}");
     }

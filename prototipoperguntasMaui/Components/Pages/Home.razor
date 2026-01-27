@@ -218,50 +218,9 @@
             return;
         }
 
+        // Navigate to the pre-checkin screen where user selects activity and then takes/chooses a photo
         AppState.PrepareCheckin(store.Id);
-
-        try
-        {
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                var permission = await Permissions.RequestAsync<Permissions.Camera>();
-                if (permission != PermissionStatus.Granted)
-                {
-                    ShowDialogMessage("Permissão de câmera negada.");
-                    return;
-                }
-
-                if (!MediaPicker.Default.IsCaptureSupported)
-                {
-                    ShowDialogMessage("Captura de câmera não suportada neste dispositivo.");
-                    return;
-                }
-
-                var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
-                {
-                    Title = "Foto da Fachada"
-                });
-
-                if (photo == null)
-                {
-                    ShowDialogMessage("É necessário tirar uma foto para iniciar a visita.");
-                    return;
-                }
-
-                using var stream = await photo.OpenReadAsync();
-                using var ms = new MemoryStream();
-                await stream.CopyToAsync(ms);
-                var base64 = Convert.ToBase64String(ms.ToArray());
-                var dataUrl = $"data:{photo.ContentType};base64,{base64}";
-
-                AppState.CompleteCheckin(store.Id, dataUrl);
-                Nav.NavigateTo($"/store/{store.Id}");
-            });
-        }
-        catch (Exception ex)
-        {
-            ShowDialogMessage($"Não foi possível abrir a câmera. {ex.GetType().Name}: {ex.Message}");
-        }
+        Nav.NavigateTo($"/checkin/{store.Id}");
     }
 
     private void GenerateFinalJson()
